@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+python-dotenv
+sqlalchemy
+psycopg2-binary
+python-jose[cryptography]
+google-generativeai
+groq
+pydantic
+passlib[bcrypt]
+email-validator
