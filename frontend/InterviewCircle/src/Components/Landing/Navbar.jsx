@@ -48,7 +48,7 @@ const Navbar = () => {
         </div>
 
         <div className="hidden lg:flex items-center gap-4">
-          <Link to="/login" className="text-slate-300 hover:text-white transition-colors font-medium">Sign In</Link>
+          <Link to="/login" className="text-slate-300 hover:text-white transition-colors font-medium">Log In</Link>
           <Link to="/signup">
             <Button>Start Your Free Interview</Button>
           </Link>
@@ -70,7 +70,7 @@ const Navbar = () => {
           </div>
           <div className="flex flex-col gap-4">
             <Link to="/login">
-              <Button variant="outline" className="w-full">Sign In</Button>
+              <Button variant="outline" className="w-full">Log In</Button>
             </Link>
             <Link to="/signup">
               <Button className="w-full">Start Free Interview</Button>

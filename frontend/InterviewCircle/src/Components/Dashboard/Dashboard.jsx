@@ -16,9 +16,11 @@ import {
   FiZap,
   FiArrowRight,
   FiCalendar,
-  FiBookOpen
+  FiBookOpen,
+  FiPlusCircle
 } from "react-icons/fi";
 import { Link } from 'react-router-dom';
+import CreateInterview from './CreateInterview';
 
 const SidebarItem = ({ icon: Icon, label, active = false, onClick }) => (
   <button 
@@ -73,7 +75,7 @@ const Dashboard = () => {
         <nav className="space-y-2 flex-grow">
           <SidebarItem icon={FiHome} label="Dashboard" active={activeTab === 'Home'} onClick={() => { setActiveTab('Home'); navigate('/dashboard'); }} />
           <SidebarItem icon={FiBookOpen} label="Question Bank" active={activeTab === 'Questions'} onClick={() => { setActiveTab('Questions'); navigate('/questions'); }} />
-          <SidebarItem icon={FiVideo} label="My Interviews" active={activeTab === 'Interviews'} onClick={() => setActiveTab('Interviews')} />
+          <SidebarItem icon={FiPlusCircle} label="Create Interview" active={activeTab === 'Create'} onClick={() => setActiveTab('Create')} />
           <SidebarItem icon={FiBarChart2} label="Analytics" active={activeTab === 'Analytics'} onClick={() => setActiveTab('Analytics')} />
           <SidebarItem icon={FiCalendar} label="Schedule" active={activeTab === 'Schedule'} onClick={() => setActiveTab('Schedule')} />
           <SidebarItem icon={FiUser} label="My Profile" active={activeTab === 'Profile'} onClick={() => setActiveTab('Profile')} />
@@ -119,93 +121,104 @@ const Dashboard = () => {
 
         {/* Dashboard Grid */}
         <div className="p-8 space-y-8">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
-              <h1 className="text-3xl font-bold text-white mb-1">Good morning, Alex!</h1>
-              <p className="text-slate-400 text-sm">You have a mock interview scheduled for today at 2:00 PM.</p>
-            </div>
-            <Link to="/setup">
-              <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all active:scale-[0.98] shadow-lg shadow-indigo-500/25">
-                <FiPlus size={20} /> Start New Interview
-              </button>
-            </Link>
-          </div>
-
-
-          {/* Stats */}
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <StatCard label="Total Interviews" value="12" icon={FiVideo} color="indigo" trend="+2 this week" />
-            <StatCard label="Avg. Score" value="84%" icon={FiCheckCircle} color="emerald" trend="+5% increase" />
-            <StatCard label="Questions Solved" value="142" icon={FiZap} color="amber" trend="+12 today" />
-            <StatCard label="Hours Practiced" value="28.5" icon={FiClock} color="purple" trend="+4.2h this week" />
-          </div>
-
-          <div className="grid lg:grid-cols-3 gap-8">
-            {/* Recent Activity */}
-            <div className="lg:col-span-2 space-y-6">
-              <div className="flex justify-between items-center">
-                <h2 className="text-xl font-bold text-white">Recent Activity</h2>
-                <button className="text-indigo-400 text-sm font-bold hover:text-indigo-300">View all</button>
-              </div>
-              
-              <div className="space-y-4">
-                {[
-                  { title: "Senior Frontend Engineer Simulation", date: "Yesterday, 4:30 PM", score: 88, status: "Completed", type: "Technical" },
-                  { title: "Behavioral Prep (Google STAR Method)", date: "2 days ago", score: 92, status: "Completed", type: "Behavioral" },
-                  { title: "System Design: Scalable Chat App", date: "May 4, 2024", score: 74, status: "Review Needed", type: "Technical" }
-                ].map((item, i) => (
-                  <div key={i} className="bg-slate-900/50 border border-white/5 p-5 rounded-3xl flex items-center justify-between group hover:border-indigo-500/50 transition-all cursor-pointer">
-                    <div className="flex items-center gap-4">
-                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
-                        item.type === 'Technical' ? 'bg-blue-500/10 text-blue-400' : 'bg-purple-500/10 text-purple-400'
-                      }`}>
-                        {item.type === 'Technical' ? <FiZap size={20} /> : <FiUser size={20} />}
-                      </div>
-                      <div>
-                        <h4 className="text-white font-bold mb-0.5">{item.title}</h4>
-                        <p className="text-slate-500 text-xs">{item.date} • {item.type}</p>
-                      </div>
-                    </div>
-                    <div className="text-right flex items-center gap-6">
-                      <div className="hidden sm:block">
-                        <p className={`text-lg font-bold ${item.score >= 80 ? 'text-emerald-400' : 'text-amber-400'}`}>{item.score}%</p>
-                        <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Score</p>
-                      </div>
-                      <FiArrowRight size={20} className="text-slate-600 group-hover:text-white group-hover:translate-x-1 transition-all" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Upcoming / Recommendations */}
-            <div className="space-y-6">
-              <h2 className="text-xl font-bold text-white">Recommended for You</h2>
-              <div className="bg-indigo-600 rounded-[32px] p-8 text-white relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 blur-[40px] -translate-y-1/2 translate-x-1/2" />
-                <h4 className="text-xl font-bold mb-4 relative z-10">Master the STAR Method</h4>
-                <p className="text-indigo-100 text-sm mb-6 relative z-10 leading-relaxed">
-                  Based on your last interview, you could improve your behavioral storytelling.
-                </p>
-                <button className="bg-white text-indigo-600 px-6 py-3 rounded-2xl font-bold text-sm hover:bg-slate-100 transition-all relative z-10">
-                  Try Module
+          {activeTab === 'Home' ? (
+            <>
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                  <h1 className="text-3xl font-bold text-white mb-1">Good morning, Alex!</h1>
+                  <p className="text-slate-400 text-sm">You have a mock interview scheduled for today at 2:00 PM.</p>
+                </div>
+                <button 
+                  onClick={() => setActiveTab('Create')}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all active:scale-[0.98] shadow-lg shadow-indigo-500/25"
+                >
+                  <FiPlus size={20} /> Start New Interview
                 </button>
               </div>
 
-              <div className="bg-slate-900/50 border border-white/5 p-6 rounded-[32px] space-y-4">
-                <h4 className="text-white font-bold">Upcoming Schedule</h4>
-                <div className="flex items-center gap-4 p-4 bg-slate-950/50 rounded-2xl border border-white/5">
-                  <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
-                    <FiClock size={20} />
+
+              {/* Stats */}
+              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <StatCard label="Total Interviews" value="12" icon={FiVideo} color="indigo" trend="+2 this week" />
+                <StatCard label="Avg. Score" value="84%" icon={FiCheckCircle} color="emerald" trend="+5% increase" />
+                <StatCard label="Questions Solved" value="142" icon={FiZap} color="amber" trend="+12 today" />
+                <StatCard label="Hours Practiced" value="28.5" icon={FiClock} color="purple" trend="+4.2h this week" />
+              </div>
+
+              <div className="grid lg:grid-cols-3 gap-8">
+                {/* Recent Activity */}
+                <div className="lg:col-span-2 space-y-6">
+                  <div className="flex justify-between items-center">
+                    <h2 className="text-xl font-bold text-white">Recent Activity</h2>
+                    <button className="text-indigo-400 text-sm font-bold hover:text-indigo-300">View all</button>
                   </div>
-                  <div>
-                    <p className="text-white text-sm font-bold">Today, 2:00 PM</p>
-                    <p className="text-slate-500 text-xs">Meta Mock Interview</p>
+                  
+                  <div className="space-y-4">
+                    {[
+                      { title: "Senior Frontend Engineer Simulation", date: "Yesterday, 4:30 PM", score: 88, status: "Completed", type: "Technical" },
+                      { title: "Behavioral Prep (Google STAR Method)", date: "2 days ago", score: 92, status: "Completed", type: "Behavioral" },
+                      { title: "System Design: Scalable Chat App", date: "May 4, 2024", score: 74, status: "Review Needed", type: "Technical" }
+                    ].map((item, i) => (
+                      <div key={i} className="bg-slate-900/50 border border-white/5 p-5 rounded-3xl flex items-center justify-between group hover:border-indigo-500/50 transition-all cursor-pointer">
+                        <div className="flex items-center gap-4">
+                          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
+                            item.type === 'Technical' ? 'bg-blue-500/10 text-blue-400' : 'bg-purple-500/10 text-purple-400'
+                          }`}>
+                            {item.type === 'Technical' ? <FiZap size={20} /> : <FiUser size={20} />}
+                          </div>
+                          <div>
+                            <h4 className="text-white font-bold mb-0.5">{item.title}</h4>
+                            <p className="text-slate-500 text-xs">{item.date} • {item.type}</p>
+                          </div>
+                        </div>
+                        <div className="text-right flex items-center gap-6">
+                          <div className="hidden sm:block">
+                            <p className={`text-lg font-bold ${item.score >= 80 ? 'text-emerald-400' : 'text-amber-400'}`}>{item.score}%</p>
+                            <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Score</p>
+                          </div>
+                          <FiArrowRight size={20} className="text-slate-600 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Upcoming / Recommendations */}
+                <div className="space-y-6">
+                  <h2 className="text-xl font-bold text-white">Recommended for You</h2>
+                  <div className="bg-indigo-600 rounded-[32px] p-8 text-white relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 blur-[40px] -translate-y-1/2 translate-x-1/2" />
+                    <h4 className="text-xl font-bold mb-4 relative z-10">Master the STAR Method</h4>
+                    <p className="text-indigo-100 text-sm mb-6 relative z-10 leading-relaxed">
+                      Based on your last interview, you could improve your behavioral storytelling.
+                    </p>
+                    <button className="bg-white text-indigo-600 px-6 py-3 rounded-2xl font-bold text-sm hover:bg-slate-100 transition-all relative z-10">
+                      Try Module
+                    </button>
+                  </div>
+
+                  <div className="bg-slate-900/50 border border-white/5 p-6 rounded-[32px] space-y-4">
+                    <h4 className="text-white font-bold">Upcoming Schedule</h4>
+                    <div className="flex items-center gap-4 p-4 bg-slate-950/50 rounded-2xl border border-white/5">
+                      <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
+                        <FiClock size={20} />
+                      </div>
+                      <div>
+                        <p className="text-white text-sm font-bold">Today, 2:00 PM</p>
+                        <p className="text-slate-500 text-xs">Meta Mock Interview</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
+            </>
+          ) : activeTab === 'Create' ? (
+            <CreateInterview />
+          ) : (
+            <div className="flex flex-col items-center justify-center py-20 text-slate-500">
+              <p className="text-lg font-medium">Content for {activeTab} is coming soon.</p>
             </div>
-          </div>
+          )}
         </div>
       </main>
     </motion.div>

@@ -59,6 +59,11 @@ const Hero = () => (
         <Button variant="secondary" className="w-full sm:w-auto h-14 px-8 text-lg">
           Explore Features
         </Button>
+        <Link to="/login" className="w-full sm:w-auto">
+          <Button variant="outline" className="w-full h-14 px-8 text-lg">
+            Log In
+          </Button>
+        </Link>
       </motion.div>
 
       <motion.div 
