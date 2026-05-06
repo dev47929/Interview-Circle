@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { 
   FiHome, 
   FiVideo, 
@@ -14,7 +15,8 @@ import {
   FiCheckCircle,
   FiZap,
   FiArrowRight,
-  FiCalendar
+  FiCalendar,
+  FiBookOpen
 } from "react-icons/fi";
 import { Link } from 'react-router-dom';
 
