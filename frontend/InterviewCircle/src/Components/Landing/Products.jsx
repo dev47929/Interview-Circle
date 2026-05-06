@@ -1,4 +1,3 @@
-import React from 'react';
 import { FiCode, FiUserCheck, FiFileText, FiStar } from "react-icons/fi";
 import { HiOutlineBuildingOffice2 } from "react-icons/hi2";
 import { motion } from 'framer-motion';
