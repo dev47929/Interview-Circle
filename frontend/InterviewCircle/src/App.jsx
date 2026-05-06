@@ -8,6 +8,7 @@ import InterviewSetup from './Components/Dashboard/InterviewSetup';
 import InterviewRoom from './Components/Dashboard/InterviewRoom';
 import InterviewFeedback from './Components/Dashboard/InterviewFeedback';
 import QuestionBank from './Components/Dashboard/QuestionBank';
+import QuestionSolver from './Components/Dashboard/QuestionSolver';
 import Settings from './Components/Dashboard/Settings';
 import './App.css'
 
@@ -25,11 +26,13 @@ const AnimatedRoutes = () => {
         <Route path="/interview-room" element={<InterviewRoom />} />
         <Route path="/feedback" element={<InterviewFeedback />} />
         <Route path="/questions" element={<QuestionBank />} />
+        <Route path="/questions/:id" element={<QuestionSolver />} />
         <Route path="/settings" element={<Settings />} />
       </Routes>
     </AnimatePresence>
   );
 };
+
 
 function App() {
   return (

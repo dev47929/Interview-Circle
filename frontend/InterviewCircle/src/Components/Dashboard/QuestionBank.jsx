@@ -13,7 +13,8 @@ import {
   FiArrowLeft,
   FiX,
   FiCheck,
-  FiChevronDown
+  FiChevronDown,
+  FiHash
 } from "react-icons/fi";
 import { Link } from 'react-router-dom';
 
@@ -31,8 +32,11 @@ const CategoryButton = ({ icon: Icon, label, active, onClick }) => (
   </button>
 );
 
-const QuestionCard = ({ title, difficulty, category, solved, company }) => (
-  <div className="bg-slate-900/50 border border-white/5 p-6 rounded-[32px] hover:border-indigo-500/50 transition-all group cursor-pointer relative overflow-hidden">
+const QuestionCard = ({ id, title, difficulty, category, solved, company }) => (
+  <Link 
+    to={`/questions/${id || title.toLowerCase().replace(/ /g, '-')}`}
+    className="bg-slate-900/50 border border-white/5 p-6 rounded-[32px] hover:border-indigo-500/50 transition-all group cursor-pointer relative overflow-hidden block"
+  >
     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
       <FiZap size={40} className="text-indigo-500" />
     </div>
@@ -64,7 +68,7 @@ const QuestionCard = ({ title, difficulty, category, solved, company }) => (
         <FiChevronRight />
       </div>
     </div>
-  </div>
+  </Link>
 );
 
 const QuestionBank = () => {
@@ -76,6 +80,7 @@ const QuestionBank = () => {
 
   const categories = [
     { label: 'All', icon: FiZap },
+    { label: 'DSA', icon: FiHash },
     { label: 'Technical', icon: FiCode },
     { label: 'Behavioral', icon: FiUser },
     { label: 'System Design', icon: FiLayout },
@@ -86,16 +91,19 @@ const QuestionBank = () => {
   const difficulties = ['All', 'Easy', 'Medium', 'Hard'];
 
   const questions = [
-    { title: "Explain the concept of 'Closures' in JavaScript with examples.", difficulty: "Medium", category: "Technical", solved: true, company: "Google" },
-    { title: "Tell me about a time you had a conflict with a teammate.", difficulty: "Easy", category: "Behavioral", solved: true, company: "Amazon" },
-    { title: "Design a URL shortening service like Bitly.", difficulty: "Hard", category: "System Design", solved: false, company: "Meta" },
-    { title: "What is the difference between SQL and NoSQL?", difficulty: "Medium", category: "Database", solved: false, company: "Microsoft" },
-    { title: "How would you optimize a slow React application?", difficulty: "Hard", category: "Technical", solved: true, company: "Netflix" },
-    { title: "What are your greatest strengths and weaknesses?", difficulty: "Easy", category: "Behavioral", solved: true, company: "Apple" },
-    { title: "Implement a Redux-like state management from scratch.", difficulty: "Hard", category: "Technical", solved: false, company: "Uber" },
-    { title: "Design a scalable notification system.", difficulty: "Hard", category: "System Design", solved: false, company: "Google" },
-    { title: "Explain database normalization and its forms.", difficulty: "Medium", category: "Database", solved: true, company: "Amazon" },
+    { id: 'rotating-the-box', title: "Rotating the Box", difficulty: "Medium", category: "DSA", solved: false, company: "Amazon" },
+    { id: 'closures-js', title: "Explain the concept of 'Closures' in JavaScript with examples.", difficulty: "Medium", category: "Technical", solved: true, company: "Google" },
+    { id: 'conflict-teammate', title: "Tell me about a time you had a conflict with a teammate.", difficulty: "Easy", category: "Behavioral", solved: true, company: "Amazon" },
+    { id: 'bitly-design', title: "Design a URL shortening service like Bitly.", difficulty: "Hard", category: "System Design", solved: false, company: "Meta" },
+    { id: 'sql-vs-nosql', title: "What is the difference between SQL and NoSQL?", difficulty: "Medium", category: "Database", solved: false, company: "Microsoft" },
+    { id: 'slow-react', title: "How would you optimize a slow React application?", difficulty: "Hard", category: "Technical", solved: true, company: "Netflix" },
+    { id: 'strengths-weaknesses', title: "What are your greatest strengths and weaknesses?", difficulty: "Easy", category: "Behavioral", solved: true, company: "Apple" },
+    { id: 'redux-scratch', title: "Implement a Redux-like state management from scratch.", difficulty: "Hard", category: "Technical", solved: false, company: "Uber" },
+    { id: 'notification-system', title: "Design a scalable notification system.", difficulty: "Hard", category: "System Design", solved: false, company: "Google" },
+    { id: 'db-normalization', title: "Explain database normalization and its forms.", difficulty: "Medium", category: "Database", solved: true, company: "Amazon" },
   ];
+
+
 
   const filteredQuestions = useMemo(() => {
     return questions.filter(q => {
@@ -118,8 +126,10 @@ const QuestionBank = () => {
 
   return (
     <motion.div 
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      transition={{ duration: 0.3, ease: "easeInOut" }}
       className="min-h-screen bg-slate-950 p-6 md:p-12 font-sans text-white"
     >
       <div className="max-w-6xl mx-auto">
