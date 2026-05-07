@@ -196,7 +196,7 @@ Rules:
 
         headers: {
           Authorization:
-            "Bearer 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",
+            "Bearer TOKEN",
 
           "Content-Type": "application/json",
 
