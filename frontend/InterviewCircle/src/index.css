@@ -7,7 +7,7 @@
 
 @layer base {
   body {
-    @apply bg-background text-foreground;
+    @apply bg-[#020617] text-foreground;
     margin: 0;
     padding: 0;
     overflow-x: hidden;

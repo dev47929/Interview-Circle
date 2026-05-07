@@ -39,7 +39,9 @@ const InterviewFeedback = () => {
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="min-h-screen bg-slate-950 p-6 md:p-12 font-sans text-white"
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.4 }}
+      className="min-h-screen bg-transparent p-6 md:p-12 font-sans text-white"
     >
       <div className="max-w-6xl mx-auto">
         {/* Header */}

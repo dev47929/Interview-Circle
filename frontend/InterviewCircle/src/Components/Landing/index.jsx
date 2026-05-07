@@ -11,7 +11,6 @@ import Pricing from './Pricing';
 import FAQ from './FAQ';
 import CTA from './CTA';
 import Footer from './Footer';
-import LandingBackground from '../React-bits/LandingBackground';
 
 import { motion } from 'framer-motion';
 
@@ -22,18 +21,8 @@ const InterviewCircleLanding = () => {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.5 }}
-      className="min-h-screen bg-slate-950 font-sans selection:bg-indigo-500 selection:text-white relative"
+      className="min-h-screen bg-transparent font-sans selection:bg-indigo-500 selection:text-white relative"
     >
-
-      <div className="fixed inset-0 z-0 pointer-events-none opacity-40">
-        <LandingBackground 
-          squareSize={50}
-          borderColor="#312e81"
-          hoverFillColor="#4338ca"
-          hoverTrailAmount={10}
-          speed={0.5}
-        />
-      </div>
 
       <div className="relative z-10">
         <Navbar />

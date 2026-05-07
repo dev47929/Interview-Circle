@@ -75,9 +75,11 @@ const InterviewSetup = () => {
 
   return (
     <motion.div 
-      initial={{ opacity: 0, scale: 0.98 }}
-      animate={{ opacity: 1, scale: 1 }}
-      className="min-h-screen bg-slate-950 p-6 md:p-12 flex items-center justify-center font-sans"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      transition={{ duration: 0.3 }}
+      className="flex-1 p-8 space-y-8 bg-transparent"
     >
       <div className="w-full max-w-6xl">
         <div className="flex justify-between items-center mb-12">

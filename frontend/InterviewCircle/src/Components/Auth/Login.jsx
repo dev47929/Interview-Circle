@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { FiMail, FiLock, FiArrowRight, FiZap } from "react-icons/fi";
 import { FaGoogle, FaGithub } from "react-icons/fa";
 import { motion } from 'framer-motion';
-import LandingBackground from '../React-bits/LandingBackground';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -20,19 +19,8 @@ const Login = () => {
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
       transition={{ duration: 0.4 }}
-      className="min-h-screen bg-slate-950 flex items-center justify-center p-6 relative overflow-hidden"
+      className="min-h-screen bg-transparent flex items-center justify-center p-6 relative overflow-hidden"
     >
-
-      {/* Background */}
-      <div className="absolute inset-0 z-0 pointer-events-none opacity-40">
-        <LandingBackground 
-          squareSize={50}
-          borderColor="#312e81"
-          hoverFillColor="#4338ca"
-          hoverTrailAmount={10}
-          speed={0.5}
-        />
-      </div>
 
       <motion.div 
         initial={{ opacity: 0, y: 20 }}

@@ -4,30 +4,37 @@ import InterviewCircleLanding from './Components/Landing'
 import Login from './Components/Auth/Login';
 import Signup from './Components/Auth/Signup';
 import Dashboard from './Components/Dashboard/Dashboard';
+import DashboardLayout from './Components/Dashboard/DashboardLayout';
 import InterviewSetup from './Components/Dashboard/InterviewSetup';
 import InterviewRoom from './Components/Dashboard/InterviewRoom';
 import InterviewFeedback from './Components/Dashboard/InterviewFeedback';
 import QuestionBank from './Components/Dashboard/QuestionBank';
 import QuestionSolver from './Components/Dashboard/QuestionSolver';
 import Settings from './Components/Dashboard/Settings';
+import LandingBackground from './Components/React-bits/LandingBackground';
 import './App.css'
 
 const AnimatedRoutes = () => {
   const location = useLocation();
   
   return (
-    <AnimatePresence mode="wait">
+    <AnimatePresence mode="wait" initial={false}>
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<InterviewCircleLanding />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/setup" element={<InterviewSetup />} />
+        
+        {/* Dashboard Routes with Persistent Sidebar */}
+        <Route element={<DashboardLayout />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/questions" element={<QuestionBank />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/setup" element={<InterviewSetup />} />
+        </Route>
+
         <Route path="/interview-room" element={<InterviewRoom />} />
         <Route path="/feedback" element={<InterviewFeedback />} />
-        <Route path="/questions" element={<QuestionBank />} />
         <Route path="/questions/:id" element={<QuestionSolver />} />
-        <Route path="/settings" element={<Settings />} />
       </Routes>
     </AnimatePresence>
   );
@@ -36,9 +43,24 @@ const AnimatedRoutes = () => {
 
 function App() {
   return (
-    <Router>
-      <AnimatedRoutes />
-    </Router>
+    <div className="bg-[#020617] min-h-screen relative overflow-hidden">
+      {/* Persistent Global Background */}
+      <div className="fixed inset-0 z-0 pointer-events-none opacity-40">
+        <LandingBackground 
+          squareSize={50}
+          borderColor="#312e81"
+          hoverFillColor="#4338ca"
+          hoverTrailAmount={10}
+          speed={0.5}
+        />
+      </div>
+
+      <div className="relative z-10">
+        <Router>
+          <AnimatedRoutes />
+        </Router>
+      </div>
+    </div>
   )
 }
 

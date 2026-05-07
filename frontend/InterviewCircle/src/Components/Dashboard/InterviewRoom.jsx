@@ -241,7 +241,13 @@ const InterviewRoom = () => {
   );
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white font-sans flex flex-col">
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.5 }}
+      className="min-h-screen bg-transparent text-white font-sans flex flex-col"
+    >
       {/* Header */}
       <header className="h-16 border-b border-white/5 px-6 flex items-center justify-between bg-slate-900/50 backdrop-blur-md z-10">
         <div className="flex items-center gap-4">
@@ -468,7 +474,7 @@ const InterviewRoom = () => {
           </>
         )}
       </main>
-    </div>
+    </motion.div>
   );
 };
 
