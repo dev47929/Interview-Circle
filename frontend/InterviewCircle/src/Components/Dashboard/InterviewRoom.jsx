@@ -26,7 +26,7 @@ const InterviewRoom = () => {
   const [messages, setMessages] = useState([
     {
       role: "assistant",
-      content: `Hello! I'm your AI Interviewer. We are starting your ${initialType} interview (ID: ${String(interview_id || '').substring(0, 8)}...). Please tell me which job role you're applying for and share the job description if you have it.`,
+      content: `Hello! I'm your AI Interviewer. We are starting your ${initialType} interview (ID: ${String(interview_id || '').substring(0, 8)}...).`,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     },
   ]);
