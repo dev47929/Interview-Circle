@@ -1,549 +1,403 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  FiMic, 
-  FiMicOff, 
-  FiVideo, 
-  FiVideoOff, 
-  FiPhoneMissed, 
-  FiMessageSquare,
-  FiSettings,
-  FiClock,
-  FiTerminal,
-  FiAlertCircle,
-  FiZap,
-  FiPlay,
-  FiCode,
-  FiUser
-} from "react-icons/fi";
-import { useNavigate, useLocation } from 'react-router-dom';
-import Editor from '@monaco-editor/react';
-import { useAuth } from '../../Context/AuthContext';
+import React, { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  IconSend,
+  IconUser,
+  IconRobot,
+  IconLoader2,
+  IconSettings,
+  IconVideo,
+  IconVideoOff,
+  IconMicrophone,
+  IconScreenShare,
+  IconPhoneOff
+} from "@tabler/icons-react";
+import { useLocation } from "react-router-dom";
+import { cn } from "@/lib/utils";
+import { IconVolume, IconVolumeOff } from "@tabler/icons-react";
+import Editor from "@monaco-editor/react";
+
+const OPENROUTER_API_KEY = "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";
 
 const InterviewRoom = () => {
   const location = useLocation();
-  const navigate = useNavigate();
-  
-  // State from navigation - ensure we handle both cases correctly
-  const state = location.state || {};
-  const interview_id = state.interview_id ? parseInt(state.interview_id, 10) : null;
-  const type = state.type || 'technical';
-  
-  const [isMuted, setIsMuted] = useState(false);
-  const [isVideoOff, setIsVideoOff] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(2700); // 45 minutes
-  const [messages, setMessages] = useState([]);
-  const [isAiThinking, setIsAiThinking] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
-  const [transcription, setTranscription] = useState("");
-  const hasStartedRef = useRef(false);
-  
-  // Technical Room States
-  const [code, setCode] = useState("// Write your code here\n\nfunction solution() {\n  console.log('Hello World');\n}");
+  const { type: initialType, interview_id } = location.state || { type: 'behavioral', interview_id: 'demo' };
+
+  const [messages, setMessages] = useState([
+    {
+      role: "assistant",
+      content: `Hello! I'm your AI Interviewer. We are starting your ${initialType} interview (ID: ${String(interview_id || '').substring(0, 8)}...). Please tell me which job role you're applying for and share the job description if you have it.`,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    },
+  ]);
+
+  const [input, setInput] = useState("");
+  const [code, setCode] = useState("");
   const [language, setLanguage] = useState("javascript");
-  const [output, setOutput] = useState("");
-  const [isRunning, setIsRunning] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const [jobTitle, setJobTitle] = useState("Software Engineer");
+  const scrollRef = useRef(null);
+  const lastSpokenRef = useRef(-1);
 
-  const videoRef = useRef(null);
-  const recognitionRef = useRef(null);
+  const languages = [
+    { id: "javascript", name: "JavaScript" },
+    { id: "python", name: "Python" },
+    { id: "java", name: "Java" },
+    { id: "cpp", name: "C++" },
+    { id: "typescript", name: "TypeScript" },
+  ];
 
-  // Timer logic
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft(prev => prev > 0 ? prev - 1 : 0);
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
+  // ---------------- TTS LOGIC ----------------
+  const speakMessage = (text) => {
+    if (isMuted || !window.speechSynthesis) return;
 
-  // Preload voices for TTS
-  useEffect(() => {
-    const loadVoices = () => {
-      window.speechSynthesis.getVoices();
-    };
-    loadVoices();
-    if (window.speechSynthesis.onvoiceschanged !== undefined) {
-      window.speechSynthesis.onvoiceschanged = loadVoices;
-    }
-  }, []);
-
-  // WebCam
-  useEffect(() => {
-    if (videoRef.current && !isVideoOff) {
-      navigator.mediaDevices.getUserMedia({ video: true })
-        .then(stream => {
-          if (videoRef.current) videoRef.current.srcObject = stream;
-        })
-        .catch(err => console.error("Error accessing webcam:", err));
-    }
-  }, [isVideoOff]);
-
-  // Speech Recognition Setup
-  useEffect(() => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (SpeechRecognition) {
-      recognitionRef.current = new SpeechRecognition();
-      recognitionRef.current.continuous = true;
-      recognitionRef.current.interimResults = true;
-
-      recognitionRef.current.onresult = (event) => {
-        const transcript = Array.from(event.results)
-          .map(result => result[0])
-          .map(result => result.transcript)
-          .join('');
-        setTranscription(transcript);
-      };
-
-      recognitionRef.current.onend = () => {
-        if (isRecording && recognitionRef.current) {
-          try {
-            recognitionRef.current.start();
-          } catch (e) {}
-        }
-      };
-    }
-  }, [isRecording]);
-
-  // Keyboard Shortcut for PTT
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.code === 'Space' && !isRecording && document.activeElement.tagName !== 'TEXTAREA' && !document.activeElement.classList.contains('inputarea')) {
-        e.preventDefault();
-        startRecording();
-      }
-    };
-    const handleKeyUp = (e) => {
-      if (e.code === 'Space' && isRecording) {
-        e.preventDefault();
-        stopRecording();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
-    };
-  }, [isRecording]);
-
-  const startRecording = () => {
-    if (recognitionRef.current && !isRecording) {
-      setIsRecording(true);
-      setTranscription("");
-      try {
-        recognitionRef.current.start();
-      } catch (e) {
-        console.error("Speech recognition error:", e);
-      }
-    }
-  };
-
-  const stopRecording = async () => {
-    if (recognitionRef.current && isRecording) {
-      setIsRecording(false);
-      recognitionRef.current.stop();
-      
-      // Use a small timeout to ensure transcription is finalized
-      setTimeout(async () => {
-        if (transcription.trim()) {
-          const userMessage = transcription;
-          addMessage('user', userMessage);
-          setTranscription("");
-          await getAiResponse(userMessage);
-        }
-      }, 500);
-    }
-  };
-
-  const speak = (text) => {
-    if (!window.speechSynthesis) return;
-    
-    // Stop any current speech
+    // Cancel any ongoing speech
     window.speechSynthesis.cancel();
-    
+
     const utterance = new SpeechSynthesisUtterance(text);
-    
-    // Attempt to find a friendly female voice
     const voices = window.speechSynthesis.getVoices();
-    const voice = voices.find(v => 
-      (v.name.includes('Google') && v.name.includes('US English') && v.name.includes('Female')) ||
-      (v.name.includes('Google') && v.name.includes('English') && (v.name.includes('Female') || v.name.includes('Natural'))) ||
-      v.name.includes('Zira') ||
-      v.name.includes('Female')
+
+    // Try to find a male voice
+    // Common male voice names: Microsoft David, Google US English (Male), Aaron, etc.
+    const maleVoice = voices.find(voice =>
+      voice.name.includes('David') ||
+      voice.name.includes('Male') ||
+      voice.name.includes('Mark') ||
+      voice.name.includes('Daniel')
     ) || voices[0];
-    
-    if (voice) utterance.voice = voice;
-    
-    // Friendly tone settings
-    utterance.pitch = 1.1; 
+
+    if (maleVoice) {
+      utterance.voice = maleVoice;
+    }
+
+    utterance.pitch = 1.0;
     utterance.rate = 1.0;
-    utterance.volume = 1.0;
-    
     window.speechSynthesis.speak(utterance);
   };
 
-  const addMessage = (role, text) => {
-    setMessages(prev => [...prev, { role, text }]);
-  };
+  // Speak initial message
+  useEffect(() => {
+    // Small timeout to ensure voices are loaded
+    const timer = setTimeout(() => {
+      if (messages.length === 1 && messages[0].role === 'assistant') {
+        speakMessage(messages[0].content);
+        lastSpokenRef.current = 0;
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, []);
 
-  const { token } = useAuth();
+  // Speak subsequent AI messages
+  useEffect(() => {
+    const lastMessageIndex = messages.length - 1;
+    if (lastMessageIndex > lastSpokenRef.current && messages[lastMessageIndex].role === 'assistant') {
+      speakMessage(messages[lastMessageIndex].content);
+      lastSpokenRef.current = lastMessageIndex;
+    }
+  }, [messages, isMuted]);
 
-  const getAiResponse = async (userMessage) => {
-    setIsAiThinking(true);
+  // ---------------- AUTO SCROLL ----------------
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages, isLoading]);
+
+  // ---------------- SEND MESSAGE ----------------
+  const sendMessage = async (e) => {
+    e.preventDefault();
+    if (!input.trim() || isLoading) return;
+
+    const userMessage = {
+      role: "user",
+      content: input.trim(),
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+
+    const updatedMessages = [...messages, userMessage];
+    setMessages(updatedMessages);
+    const messageToSend = input.trim();
+    const currentCode = code;
+    setInput("");
+    setIsLoading(true);
+
     try {
-      const response = await fetch('https://app.totalchaos.online/ai/interview', {
-        method: 'POST',
+      const response = await fetch("http://app.totalchaos.online/ai/interview", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          message: userMessage,
-          interview_id: interview_id
+          message: messageToSend,
+          code: currentCode
         }),
       });
 
-      const data = await response.json();
-
       if (!response.ok) {
-        throw new Error(data.message || 'Failed to get AI response');
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
-      if (data && data.message) {
-        addMessage('ai', data.message);
-        // Read the AI response out loud
-        speak(data.message);
-      } else {
-        throw new Error("Invalid API response format");
+
+      const data = await response.json();
+      const aiResponse = data.reply;
+
+      if (!aiResponse) {
+        throw new Error("No AI response received");
       }
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: aiResponse,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        },
+      ]);
     } catch (error) {
-      console.error("Error getting AI response:", error);
-      const errorMessage = "I'm sorry, I'm having trouble connecting to the interview server. Please check your connection.";
-      addMessage('ai', errorMessage);
-      speak(errorMessage);
+      console.error("Local API Error:", error);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: "Sorry, I'm having trouble connecting to the interview service. Please ensure your local server is running.",
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        },
+      ]);
     } finally {
-      setIsAiThinking(false);
+      setIsLoading(false);
     }
   };
-
-  // Auto-start interview
-  useEffect(() => {
-    if (interview_id !== null && token && !hasStartedRef.current) {
-      hasStartedRef.current = true;
-      // Slight delay to ensure components are ready
-      const timer = setTimeout(() => {
-        getAiResponse("start my interview");
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [interview_id, token]);
-
-  const runCode = async () => {
-    setIsRunning(true);
-    setOutput("Executing code...");
-    try {
-      setTimeout(() => {
-        setOutput("Hello World\n\n[Execution Successful]\nTime: 0.1s\nMemory: 12MB");
-        setIsRunning(false);
-      }, 1000);
-    } catch (error) {
-      setOutput("Error executing code. Please try again.");
-      setIsRunning(false);
-    }
-  };
-
-  const formatTime = (seconds) => {
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    return `${m}:${s < 10 ? '0' : ''}${s}`;
-  };
-
-  // Helper to render AI visual
-  const renderAiVisual = (isSmall = false) => (
-    <div className={`relative bg-slate-900 rounded-[32px] border border-white/5 overflow-hidden flex flex-col ${isSmall ? 'h-64' : 'flex-grow'}`}>
-      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 to-transparent"></div>
-      
-      {/* AI Visual */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="relative">
-          <div className={`${isSmall ? 'w-32 h-32' : 'w-64 h-64'} rounded-full bg-indigo-600/10 blur-[80px] ${isAiThinking ? 'animate-pulse' : ''}`}></div>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className={`${isSmall ? 'w-24 h-24' : 'w-40 h-40'} rounded-full border-4 border-indigo-500/20 flex items-center justify-center relative`}>
-              <div className={`${isSmall ? 'w-16 h-16' : 'w-28 h-28'} rounded-full bg-indigo-500 flex items-center justify-center shadow-2xl shadow-indigo-500/50 relative z-10`}>
-                <FiZap className="text-white" size={isSmall ? 24 : 48} />
-              </div>
-              {isAiThinking && (
-                <>
-                  <div className="absolute inset-0 rounded-full border border-indigo-400 animate-ping opacity-30"></div>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="absolute bottom-6 left-8">
-        <h3 className={`${isSmall ? 'text-xl' : 'text-3xl'} font-black mb-1 text-white tracking-tight`}>TejalAI</h3>
-        <p className="text-indigo-400 text-[10px] font-bold flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          Senior AI Interviewer
-        </p>
-      </div>
-
-      {/* Latest AI Message Bubble */}
-      <div className={`absolute bottom-6 right-8 max-w-[70%]`}>
-        <AnimatePresence mode="wait">
-          {messages.filter(m => m.role === 'ai').slice(-1).map((msg, i) => (
-            <motion.div 
-              key={msg.text}
-              initial={{ opacity: 0, y: 20, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              className={`bg-indigo-600 ${isSmall ? 'p-4 rounded-2xl' : 'p-6 rounded-[32px]'} rounded-br-none shadow-2xl relative border border-white/10`}
-            >
-              <p className={`text-white ${isSmall ? 'text-xs' : 'text-lg'} font-medium leading-relaxed tracking-tight`}>
-                {isSmall && msg.text.length > 60 ? msg.text.substring(0, 60) + '...' : msg.text}
-              </p>
-            </motion.div>
-          ))}
-        </AnimatePresence>
-      </div>
-    </div>
-  );
 
   return (
-    <motion.div 
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.5 }}
-      className="min-h-screen bg-transparent text-white font-sans flex flex-col"
-    >
-      {/* Header */}
-      <header className="h-16 border-b border-white/5 px-6 flex items-center justify-between bg-slate-900/50 backdrop-blur-md z-10">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800 border border-white/5">
-            <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
-            <span className="text-xs font-bold uppercase tracking-widest text-slate-300">Live Session</span>
+    <div className="flex h-screen w-full bg-slate-950 text-white overflow-hidden">
+      {/* Left Half: Chatbot */}
+      <div className="w-1/2 flex flex-col border-r border-white/10 bg-slate-900/40 backdrop-blur-3xl relative">
+        {/* Chat Header */}
+        <header className="p-6 border-b border-white/10 flex items-center justify-between bg-white/5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/30">
+              <IconRobot size={24} className="text-white" />
+            </div>
+            <div>
+              <h2 className="font-bold text-lg text-white">AI Interviewer</h2>
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-xs text-white/50 font-medium tracking-wide">Session Active</span>
+              </div>
+            </div>
           </div>
-          <span className="text-slate-500">|</span>
-          <div className="flex items-center gap-2 text-slate-400">
-            <FiClock size={16} />
-            <span className="text-sm font-mono">{formatTime(timeLeft)} remaining</span>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => {
+                setIsMuted(!isMuted);
+                if (!isMuted) window.speechSynthesis.cancel();
+              }}
+              className={cn(
+                "w-10 h-10 rounded-xl flex items-center justify-center transition-all border",
+                isMuted ? "bg-slate-800 border-white/5 text-slate-500" : "bg-indigo-600/20 border-indigo-500/30 text-indigo-400"
+              )}
+            >
+              {isMuted ? <IconVolumeOff size={20} /> : <IconVolume size={20} />}
+            </button>
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[10px] font-bold uppercase tracking-widest">
+              {initialType} Round
+            </div>
+            <IconSettings className="text-slate-400 cursor-pointer hover:text-white transition-colors" size={20} />
           </div>
-        </div>
+        </header>
 
-        <div className="flex items-center gap-3">
-          <div className="px-4 py-1.5 rounded-xl bg-indigo-600/10 border border-indigo-500/20 text-indigo-400 text-xs font-bold uppercase tracking-wider">
-            {type.toUpperCase()} INTERVIEW
-          </div>
-          <button className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 transition-colors">
-            <FiSettings size={18} />
-          </button>
-        </div>
-      </header>
+        {/* Chat Messages */}
+        <main
+          ref={scrollRef}
+          className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar"
+        >
+          <AnimatePresence>
+            {messages.map((msg, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={cn(
+                  "flex w-full gap-3",
+                  msg.role === "user" ? "flex-row-reverse" : "flex-row"
+                )}
+              >
+                <div className={cn(
+                  "w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-lg transition-transform hover:scale-105",
+                  msg.role === "user" ? "bg-indigo-600" : "bg-slate-800 border border-white/10"
+                )}>
+                  {msg.role === "user" ? <IconUser size={18} /> : <IconRobot size={18} />}
+                </div>
 
-      {/* Main Content Area */}
-      <main className="flex-grow flex p-4 gap-4 overflow-hidden">
-        
-        {/* Technical Layout: Editor in focus, AI shifted */}
-        {type === 'technical' ? (
-          <>
-            {/* Left: Code Editor (Main) */}
-            <div className="flex-[3] flex flex-col gap-4">
-              <div className="flex-grow flex flex-col bg-slate-900 rounded-[32px] border border-white/5 overflow-hidden">
-                <div className="h-12 border-b border-white/5 px-6 flex items-center justify-between bg-slate-900/50">
-                  <div className="flex items-center gap-3">
-                    <FiCode className="text-indigo-400" />
-                    <span className="text-sm font-bold text-slate-300">Solution.js</span>
-                    <select 
-                      value={language} 
-                      onChange={(e) => setLanguage(e.target.value)}
-                      className="bg-slate-800 border-none text-[10px] uppercase font-bold tracking-widest text-slate-400 rounded-md px-2 py-1 outline-none cursor-pointer hover:bg-slate-700 transition-colors"
-                    >
-                      <option value="javascript">JavaScript</option>
-                      <option value="python">Python</option>
-                      <option value="cpp">C++</option>
-                      <option value="java">Java</option>
-                    </select>
+                <div className={cn(
+                  "max-w-[80%] flex flex-col",
+                  msg.role === "user" ? "items-end" : "items-start"
+                )}>
+                  <div className={cn(
+                    "px-5 py-3.5 rounded-2xl text-sm leading-relaxed shadow-xl whitespace-pre-wrap",
+                    msg.role === "user"
+                      ? "bg-indigo-600 text-white rounded-tr-none"
+                      : "bg-slate-900 text-white/90 border border-white/5 rounded-tl-none backdrop-blur-md"
+                  )}>
+                    {msg.content}
                   </div>
-                  <button 
-                    onClick={runCode}
-                    disabled={isRunning}
-                    className="flex items-center gap-2 px-4 py-1.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-xl text-xs font-bold hover:bg-emerald-500/20 transition-all active:scale-95"
-                  >
-                    {isRunning ? <div className="w-3 h-3 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" /> : <FiPlay size={14} />}
-                    Run Code
-                  </button>
+                  {msg.timestamp && (
+                    <span className="text-[10px] text-white/30 mt-1.5 px-1 font-medium tracking-wider">
+                      {msg.timestamp}
+                    </span>
+                  )}
                 </div>
-                <div className="flex-grow relative border-b border-white/5">
-                  <Editor
-                    height="100%"
-                    defaultLanguage="javascript"
-                    language={language}
-                    theme="vs-dark"
-                    value={code}
-                    onChange={(value) => setCode(value)}
-                    options={{
-                      minimap: { enabled: false },
-                      fontSize: 14,
-                      lineNumbers: "on",
-                      roundedSelection: true,
-                      scrollBeyondLastLine: false,
-                      automaticLayout: true,
-                      padding: { top: 20 },
-                      backgroundColor: '#0f172a'
-                    }}
-                  />
+              </motion.div>
+            ))}
+
+            {isLoading && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex items-center gap-3"
+              >
+                <div className="w-9 h-9 rounded-xl bg-slate-800 border border-white/10 flex items-center justify-center">
+                  <IconRobot size={18} />
                 </div>
-                <div className="h-40 bg-slate-950 p-5 overflow-y-auto font-mono text-sm custom-scrollbar">
-                  <div className="text-slate-500 text-[10px] uppercase font-bold tracking-widest mb-3 flex items-center gap-2">
-                    <FiTerminal size={12} /> Execution Output
+                <div className="bg-slate-900/50 px-4 py-3 rounded-2xl rounded-tl-none border border-white/5 backdrop-blur-md">
+                  <div className="flex gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-bounce" style={{ animationDelay: '300ms' }} />
                   </div>
-                  <pre className={`text-slate-300 whitespace-pre-wrap ${isRunning ? 'opacity-50' : ''}`}>
-                    {output || "No output yet. Click 'Run Code' to see results."}
-                  </pre>
                 </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </main>
+
+        {/* Chat Input */}
+        <footer className="p-6 bg-white/5 border-t border-white/10 backdrop-blur-xl">
+          <form
+            onSubmit={sendMessage}
+            className="max-w-4xl mx-auto flex items-center gap-3"
+          >
+            <div className="relative flex-1">
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Type your response here..."
+                disabled={isLoading}
+                className="w-full bg-slate-900 border border-white/10 rounded-2xl py-4 px-6 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all placeholder:text-white/20 disabled:opacity-50"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={isLoading || !input.trim()}
+              className={cn(
+                "p-4 rounded-2xl transition-all flex items-center justify-center shadow-lg shadow-indigo-500/20",
+                input.trim() && !isLoading
+                  ? "bg-indigo-600 hover:bg-indigo-500 text-white"
+                  : "bg-slate-800 text-white/20 cursor-not-allowed"
+              )}
+            >
+              {isLoading ? <IconLoader2 className="animate-spin" size={20} /> : <IconSend size={20} />}
+            </button>
+          </form>
+          <div className="mt-3 flex justify-center gap-4 items-center opacity-30">
+            <p className="text-[10px] uppercase tracking-widest font-black">AI Model: Nemotron-3</p>
+            <div className="w-1 h-1 rounded-full bg-white/50" />
+            <p className="text-[10px] uppercase tracking-widest font-black">OpenRouter v1</p>
+          </div>
+        </footer>
+      </div>
+
+      {/* Right Half: Preview & Code Editor */}
+      <div className="w-1/2 flex flex-col bg-slate-950 relative overflow-hidden">
+        {/* Decorative Background Glows */}
+        <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-indigo-600/10 blur-[120px] pointer-events-none rounded-full" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[400px] h-[400px] bg-purple-600/10 blur-[100px] pointer-events-none rounded-full" />
+
+        <div className="relative z-10 h-full flex flex-col p-8">
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-black text-white tracking-tight">
+                Interview <span className="text-indigo-400">Workspace</span>
+              </h1>
+              <p className="text-slate-400 text-sm font-medium">
+                {jobTitle} Candidate Session
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+               <button className="px-4 py-2 rounded-xl bg-rose-500 hover:bg-rose-600 text-white flex items-center gap-2 transition-all active:scale-95 shadow-lg shadow-rose-500/20 font-bold text-xs uppercase tracking-widest">
+                <IconPhoneOff size={16} />
+                End Session
+              </button>
+            </div>
+          </div>
+
+          <div className="flex-1 flex flex-col gap-6 overflow-hidden">
+            {/* Video Feed (Smaller) */}
+            <div className="h-1/3 rounded-[32px] bg-slate-900/50 border border-white/5 relative group overflow-hidden shadow-2xl backdrop-blur-sm shrink-0">
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <div className="w-16 h-16 rounded-2xl bg-slate-800 flex items-center justify-center mb-3 border border-white/5 shadow-inner">
+                  <IconVideoOff size={32} className="text-slate-600" />
+                </div>
+                <p className="text-slate-500 font-bold tracking-wider uppercase text-[10px]">Camera Disabled</p>
               </div>
               
-              {/* Bottom: Voice Input (Horizontal) */}
-              <div className="h-32 flex gap-4">
-                 <div className="w-48 bg-slate-900 rounded-[24px] border border-white/5 overflow-hidden relative shrink-0">
-                    {isVideoOff ? (
-                      <div className="absolute inset-0 flex items-center justify-center bg-slate-800">
-                        <FiVideoOff size={24} className="text-slate-600" />
-                      </div>
-                    ) : (
-                      <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover mirror" />
-                    )}
-                 </div>
-                 <div className={`flex-grow bg-slate-900 rounded-[24px] border border-white/5 p-4 flex items-center gap-6 relative overflow-hidden transition-all duration-500 ${isRecording ? 'border-red-500/30' : 'border-white/5'}`}>
-                    {isRecording && (
-                      <div className="absolute inset-0 bg-gradient-to-r from-red-500/5 to-transparent flex items-center px-8 gap-1.5 pointer-events-none">
-                        {[1,2,3,4].map(i => (
-                          <div key={i} className="w-1 bg-red-500 rounded-full animate-voice-wave" style={{ height: '15px', animationDelay: `${i * 0.15}s` }}></div>
-                        ))}
-                      </div>
-                    )}
-                    <button 
-                      onMouseDown={startRecording}
-                      onMouseUp={stopRecording}
-                      className={`w-16 h-16 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 shadow-xl ${
-                        isRecording ? 'bg-red-500 scale-110 shadow-red-500/40' : 'bg-indigo-600 hover:bg-indigo-500 shadow-indigo-600/20'
-                      }`}
-                    >
-                      <FiMic size={24} className="text-white" />
-                    </button>
-                    <div className="flex-grow">
-                       <p className={`text-[10px] font-bold uppercase tracking-widest mb-1 ${isRecording ? 'text-red-400' : 'text-slate-500'}`}>
-                          {isRecording ? "Listening..." : "Voice Control (Hold Space)"}
-                       </p>
-                       <p className="text-[11px] text-slate-300 italic line-clamp-2">
-                          {transcription || (isRecording ? "Processing..." : "Ask questions or explain your code out loud.")}
-                       </p>
-                    </div>
-                 </div>
+              {/* Overlay Controls */}
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-slate-950/60 backdrop-blur-2xl px-4 py-2 rounded-2xl border border-white/10 shadow-2xl scale-90">
+                <button className="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all">
+                  <IconMicrophone size={18} className="text-slate-300" />
+                </button>
+                <button className="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all">
+                  <IconVideo size={18} className="text-slate-300" />
+                </button>
               </div>
             </div>
 
-            {/* Right: AI Visual + Transcript */}
-            <div className="flex-1 flex flex-col gap-4">
-              {renderAiVisual(true)}
-              <div className="flex-grow bg-slate-900 rounded-[32px] border border-white/5 p-5 flex flex-col overflow-hidden shadow-xl">
-                 <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-bold text-white text-[11px] flex items-center gap-2 uppercase tracking-widest">
-                       <FiMessageSquare className="text-indigo-400" /> Transcript
-                    </h3>
-                 </div>
-                 <div className="flex-grow space-y-4 overflow-y-auto pr-2 custom-scrollbar">
-                    {messages.map((msg, i) => (
-                      <div key={i} className={`flex flex-col ${msg.role === 'ai' ? 'items-start' : 'items-end'}`}>
-                        <div className={`text-[10px] p-3 rounded-xl leading-relaxed ${
-                          msg.role === 'ai' ? 'bg-slate-800 text-slate-300 border border-white/5' : 'bg-indigo-600 text-white'
-                        }`}>
-                          {msg.text}
-                        </div>
-                      </div>
-                    ))}
-                    {isAiThinking && (
-                      <div className="flex gap-1.5 p-3">
-                        <div className="w-1 h-1 bg-indigo-500 rounded-full animate-bounce"></div>
-                        <div className="w-1 h-1 bg-indigo-500 rounded-full animate-bounce [animation-delay:0.2s]"></div>
-                      </div>
-                    )}
-                 </div>
+            {/* Monaco Code Editor */}
+            <div className="flex-1 rounded-[32px] bg-[#1e1e1e] border border-white/10 overflow-hidden shadow-2xl flex flex-col">
+              <div className="px-6 py-3 bg-white/5 border-b border-white/10 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-rose-500" />
+                  <div className="w-3 h-3 rounded-full bg-amber-500" />
+                  <div className="w-3 h-3 rounded-full bg-emerald-500" />
+                  <span className="ml-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Solution Editor</span>
+                </div>
+                
+                <select
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value)}
+                  className="bg-indigo-500/10 text-indigo-400 text-[10px] font-bold px-3 py-1.5 rounded-lg border border-indigo-500/20 outline-none cursor-pointer hover:bg-indigo-500/20 transition-all uppercase tracking-wider"
+                >
+                  {languages.map((lang) => (
+                    <option key={lang.id} value={lang.id} className="bg-slate-900 text-white">
+                      {lang.name}
+                    </option>
+                  ))}
+                </select>
               </div>
-              <div className="h-14 rounded-2xl bg-slate-900 border border-white/5 p-2 flex gap-2">
-                 <button onClick={() => setIsVideoOff(!isVideoOff)} className="flex-grow rounded-xl bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white">
-                    {isVideoOff ? <FiVideoOff size={18} /> : <FiVideo size={18} />}
-                 </button>
-                 <button onClick={() => navigate('/feedback')} className="flex-grow rounded-xl bg-red-600/10 text-red-500 hover:bg-red-600 hover:text-white flex items-center justify-center">
-                    <FiPhoneMissed size={18} />
-                 </button>
+              <div className="flex-1">
+                <Editor
+                  height="100%"
+                  language={language}
+                  theme="vs-dark"
+                  value={code}
+                  onChange={(value) => setCode(value || "")}
+                  options={{
+                    minimap: { enabled: false },
+                    fontSize: 14,
+                    padding: { top: 20 },
+                    scrollBeyondLastLine: false,
+                    fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+                    smoothScrolling: true,
+                    cursorSmoothCaretAnimation: "on"
+                  }}
+                />
               </div>
             </div>
-          </>
-        ) : (
-          /* Behavioural Layout: AI in focus */
-          <>
-            <div className="flex-[2] flex flex-col gap-4">
-               {renderAiVisual(false)}
-               
-               {/* User Controls Bottom */}
-               <div className="h-44 flex gap-4">
-                  <div className="w-64 bg-slate-900 rounded-[32px] border border-white/5 overflow-hidden relative group">
-                    {!isVideoOff ? <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover mirror" /> : <div className="flex h-full items-center justify-center bg-slate-800"><FiVideoOff size={32} className="text-slate-600" /></div>}
-                    <div className="absolute bottom-4 left-4 text-[9px] font-black uppercase tracking-widest text-white bg-black/50 px-3 py-1 rounded-full border border-white/10">Candidate</div>
-                  </div>
-                  <div className={`flex-grow bg-slate-900 rounded-[32px] border border-white/5 p-6 flex flex-col justify-center items-center gap-4 relative overflow-hidden transition-all duration-500 ${isRecording ? 'border-red-500/30' : 'border-white/5'}`}>
-                     {isRecording && (
-                       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-red-500/5 to-transparent flex items-center justify-center gap-2 pointer-events-none">
-                         {[1,2,3,4,5,6].map(i => (
-                           <div key={i} className="w-1.5 bg-red-500 rounded-full animate-voice-wave" style={{ height: '25px', animationDelay: `${i * 0.12}s` }}></div>
-                         ))}
-                       </div>
-                     )}
-                     <button onMouseDown={startRecording} onMouseUp={stopRecording} className={`w-20 h-20 rounded-full flex items-center justify-center transition-all duration-300 shadow-2xl ${isRecording ? 'bg-red-500 scale-110 shadow-red-500/40' : 'bg-indigo-600 hover:bg-indigo-500 shadow-indigo-600/20'}`}>
-                        <FiMic size={32} className="text-white" />
-                     </button>
-                     <div className="text-center">
-                        <p className={`text-xs font-bold uppercase tracking-widest ${isRecording ? 'text-red-400' : 'text-slate-400'}`}>{isRecording ? "Listening..." : "Hold SPACE to talk"}</p>
-                        <p className="text-[11px] text-slate-300 italic h-4 overflow-hidden">{transcription}</p>
-                     </div>
-                  </div>
-               </div>
-            </div>
-
-            {/* Right: Transcript Sidebar */}
-            <div className="w-80 flex flex-col gap-4 shrink-0">
-               <div className="bg-slate-900 rounded-[40px] border border-white/5 flex-grow p-6 flex flex-col overflow-hidden shadow-xl">
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="font-bold text-white text-sm flex items-center gap-2"><FiMessageSquare className="text-indigo-400" /> Session Feed</h3>
-                    <span className="text-[8px] text-indigo-400 px-2 py-0.5 rounded font-black tracking-widest bg-indigo-500/10 border border-indigo-500/20 uppercase">Live</span>
-                  </div>
-                  <div className="flex-grow space-y-5 overflow-y-auto pr-2 custom-scrollbar flex flex-col">
-                    {messages.map((msg, i) => (
-                      <motion.div key={i} initial={{ opacity: 0, x: msg.role === 'ai' ? -10 : 10 }} animate={{ opacity: 1, x: 0 }} className={`flex flex-col ${msg.role === 'ai' ? 'items-start' : 'items-end'}`}>
-                        <div className={`text-[11px] p-4 rounded-2xl leading-relaxed shadow-lg ${msg.role === 'ai' ? 'bg-slate-800 text-slate-200 rounded-tl-none border border-white/5' : 'bg-indigo-600 text-white rounded-tr-none shadow-indigo-600/20'}`}>
-                          {msg.text}
-                        </div>
-                      </motion.div>
-                    ))}
-                    {isAiThinking && (
-                      <div className="bg-slate-800 p-4 rounded-2xl rounded-tl-none flex gap-1.5 border border-white/5 w-fit">
-                        <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce"></div>
-                        <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce [animation-delay:0.2s]"></div>
-                      </div>
-                    )}
-                  </div>
-               </div>
-               <div className="bg-slate-900 rounded-[32px] border border-white/5 p-3 flex justify-between gap-3 shadow-2xl">
-                  <button onClick={() => setIsVideoOff(!isVideoOff)} className={`flex-grow h-14 rounded-2xl flex items-center justify-center transition-all ${isVideoOff ? 'bg-red-500 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}><FiVideoOff size={22} /></button>
-                  <button onClick={() => navigate('/feedback')} className="flex-grow h-14 rounded-2xl bg-red-600/10 border border-red-600/20 text-red-500 hover:bg-red-600 hover:text-white flex items-center justify-center transition-all"><FiPhoneMissed size={22} /></button>
-               </div>
-            </div>
-          </>
-        )}
-      </main>
-    </motion.div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 
