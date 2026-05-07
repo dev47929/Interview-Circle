@@ -12,6 +12,7 @@ import QuestionBank from './Components/Dashboard/QuestionBank';
 import QuestionSolver from './Components/Dashboard/QuestionSolver';
 import Settings from './Components/Dashboard/Settings';
 import Profile from './Components/Dashboard/Profile';
+import ResumeATS from './Components/Dashboard/ResumeATS';
 import LandingBackground from './Components/React-bits/LandingBackground';
 import { AuthProvider } from './Context/AuthContext';
 import './App.css'
@@ -33,6 +34,7 @@ const AnimatedRoutes = () => {
           <Route path="/settings" element={<Settings />} />
           <Route path="/setup" element={<InterviewSetup />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/resume-ats" element={<ResumeATS />} />
         </Route>
 
         <Route path="/interview-room" element={<InterviewRoom />} />

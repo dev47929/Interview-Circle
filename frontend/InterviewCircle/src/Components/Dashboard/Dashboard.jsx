@@ -7,9 +7,10 @@ import {
   FiVideo, 
   FiCheckCircle, 
   FiZap, 
-  FiClock, 
   FiArrowRight, 
-  FiUser
+  FiClock,
+  FiUser,
+  FiFileText
 } from "react-icons/fi";
 import { IconPlus } from "@tabler/icons-react";
 
@@ -151,16 +152,21 @@ export default function Dashboard() {
               </button>
             </div>
 
-            <div className="bg-slate-900/30 border border-white/5 p-6 rounded-[32px] space-y-4">
-              <h4 className="text-white font-bold text-sm uppercase tracking-widest text-slate-500">Upcoming Schedule</h4>
-              <div className="flex items-center gap-4 p-5 bg-slate-950/50 rounded-2xl border border-white/5 hover:border-indigo-500/30 transition-all group cursor-pointer">
-                <div className="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <FiClock size={24} />
+            {/* ATS Score CTA */}
+            <div
+              className="bg-slate-900/30 border border-white/5 p-6 rounded-[32px] space-y-4 cursor-pointer group hover:border-indigo-500/30 transition-all"
+              onClick={() => navigate('/resume-ats')}
+            >
+              <h4 className="text-white font-bold text-sm uppercase tracking-widest text-slate-500">Resume ATS</h4>
+              <div className="flex items-center gap-4 p-5 bg-slate-950/50 rounded-2xl border border-white/5 group-hover:border-indigo-500/30 transition-all">
+                <div className="w-12 h-12 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center group-hover:scale-110 transition-transform shrink-0">
+                  <FiFileText size={24} />
                 </div>
                 <div>
-                  <p className="text-white text-sm font-bold">Today, 2:00 PM</p>
-                  <p className="text-slate-500 text-xs font-medium">Meta Mock Interview</p>
+                  <p className="text-white text-sm font-bold">Check Your ATS Score</p>
+                  <p className="text-slate-500 text-xs font-medium">Upload resume + job description</p>
                 </div>
+                <FiArrowRight size={16} className="ml-auto text-slate-600 group-hover:text-indigo-400 group-hover:translate-x-1 transition-all" />
               </div>
             </div>
           </div>

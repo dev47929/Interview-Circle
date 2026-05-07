@@ -6,8 +6,7 @@ import {
   IconUserBolt,
   IconPlus,
   IconBook,
-  IconChartBar,
-  IconCalendar,
+  IconFileAnalytics,
   IconLogout,
   IconBolt
 } from "@tabler/icons-react";
@@ -53,14 +52,9 @@ export default function DashboardLayout() {
       icon: <IconPlus className="h-5 w-5 shrink-0 transition-colors text-white" />,
     },
     {
-      label: "Analytics",
-      href: "#",
-      icon: <IconChartBar className="h-5 w-5 shrink-0 transition-colors text-white" />,
-    },
-    {
-      label: "Schedule",
-      href: "#",
-      icon: <IconCalendar className="h-5 w-5 shrink-0 transition-colors text-white" />,
+      label: "Resume ATS",
+      href: "/resume-ats",
+      icon: <IconFileAnalytics className="h-5 w-5 shrink-0 transition-colors text-white" />,
     },
     {
       label: "My Profile",
