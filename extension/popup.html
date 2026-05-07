@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InterviewCircle Anti-Cheat</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <img src="icons/icon48.png" alt="Logo" class="logo">
+            <h1>Anti-Cheat</h1>
+            <span class="status-badge active">Active</span>
+        </header>
+
+        <main>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-value" id="violation-count">0</span>
+                    <span class="stat-label">Violations</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" id="log-count">0</span>
+                    <span class="stat-label">Logs</span>
+                </div>
+            </div>
+
+            <div class="log-section">
+                <h2>Recent Activity</h2>
+                <div id="log-list" class="log-list">
+                    <!-- Logs will be injected here -->
+                    <p class="empty-state">No violations detected yet.</p>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <button id="clear-logs" class="btn-secondary">Clear Logs</button>
+            <p class="footer-note">Secure Session Active</p>
+        </footer>
+    </div>
+    <script src="popup.js"></script>
+</body>
+</html>
