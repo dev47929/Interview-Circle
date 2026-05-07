@@ -91,6 +91,8 @@ const QuestionBank = () => {
 
   const questions = [
     { id: 'rotating-the-box', title: "Rotating the Box", difficulty: "Medium", category: "DSA", solved: false, company: "Amazon" },
+    { id: 'jump-game-ix', title: "Jump Game IX", difficulty: "Medium", category: "DSA", solved: false, company: "Google" },
+    { id: 'median-of-two-sorted-arrays', title: "Median of Two Sorted Arrays", difficulty: "Hard", category: "DSA", solved: false, company: "Meta" },
     { id: 'closures-js', title: "Explain the concept of 'Closures' in JavaScript with examples.", difficulty: "Medium", category: "Technical", solved: true, company: "Google" },
     { id: 'conflict-teammate', title: "Tell me about a time you had a conflict with a teammate.", difficulty: "Easy", category: "Behavioral", solved: true, company: "Amazon" },
     { id: 'bitly-design', title: "Design a URL shortening service like Bitly.", difficulty: "Hard", category: "System Design", solved: false, company: "Meta" },
@@ -100,7 +102,16 @@ const QuestionBank = () => {
     { id: 'redux-scratch', title: "Implement a Redux-like state management from scratch.", difficulty: "Hard", category: "Technical", solved: false, company: "Uber" },
     { id: 'notification-system', title: "Design a scalable notification system.", difficulty: "Hard", category: "System Design", solved: false, company: "Google" },
     { id: 'db-normalization', title: "Explain database normalization and its forms.", difficulty: "Medium", category: "Database", solved: true, company: "Amazon" },
+    { id: 'binary-search-impl', title: "Implement Binary Search from scratch.", difficulty: "Easy", category: "DSA", solved: false, company: "Google" },
+    { id: 'reverse-linked-list', title: "Reverse a Singly Linked List.", difficulty: "Easy", category: "DSA", solved: false, company: "Microsoft" },
+    { id: 'two-sum', title: "Two Sum Problem.", difficulty: "Easy", category: "DSA", solved: true, company: "Amazon" },
+    { id: 'valid-parentheses', title: "Check for Valid Parentheses.", difficulty: "Easy", category: "DSA", solved: true, company: "Meta" },
+    { id: 'merge-k-sorted', title: "Merge k Sorted Lists.", difficulty: "Hard", category: "DSA", solved: false, company: "Amazon" },
+    { id: 'lru-cache', title: "Design and implement LRU Cache.", difficulty: "Hard", category: "DSA", solved: false, company: "Apple" },
   ];
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
 
   const filteredQuestions = useMemo(() => {
     return questions.filter(q => {
@@ -111,6 +122,25 @@ const QuestionBank = () => {
       return matchesCat && matchesSearch && matchesDifficulty && matchesCompany;
     });
   }, [activeCat, searchQuery, selectedDifficulty, selectedCompany]);
+
+  const totalPages = Math.ceil(filteredQuestions.length / itemsPerPage);
+  
+  const currentQuestions = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredQuestions.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredQuestions, currentPage]);
+
+  const handlePageChange = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handleCategoryChange = (cat) => {
+    setActiveCat(cat);
+    setCurrentPage(1);
+  };
 
   const clearFilters = () => {
     setSelectedDifficulty('All');
@@ -162,7 +192,7 @@ const QuestionBank = () => {
             icon={cat.icon}
             label={cat.label}
             active={activeCat === cat.label}
-            onClick={() => setActiveCat(cat.label)}
+            onClick={() => handleCategoryChange(cat.label)}
           />
         ))}
         
@@ -257,9 +287,9 @@ const QuestionBank = () => {
       </div>
 
       {/* Questions Grid */}
-      {filteredQuestions.length > 0 ? (
+      {currentQuestions.length > 0 ? (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredQuestions.map((q, i) => (
+          {currentQuestions.map((q, i) => (
             <QuestionCard key={i} {...q} />
           ))}
         </div>
@@ -280,10 +310,18 @@ const QuestionBank = () => {
       )}
 
       {/* Pagination Placeholder */}
-      {filteredQuestions.length > 0 && (
+      {filteredQuestions.length > itemsPerPage && (
         <div className="mt-16 flex justify-center gap-2">
-          {[1, 2, 3, '...', 12].map((p, i) => (
-            <button key={i} className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm ${p === 1 ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:text-white'}`}>
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+            <button 
+              key={p} 
+              onClick={() => handlePageChange(p)}
+              className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm transition-all ${
+                currentPage === p 
+                  ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/25' 
+                  : 'text-slate-500 hover:text-white hover:bg-slate-800'
+              }`}
+            >
               {p}
             </button>
           ))}
