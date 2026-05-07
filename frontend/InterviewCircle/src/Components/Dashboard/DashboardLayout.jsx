@@ -30,10 +30,12 @@ export default function DashboardLayout() {
   }
 
   // Redirect to login if not authenticated and not loading
+  /* 
   if (!user && !loading) {
     setTimeout(() => navigate('/login'), 0);
     return null;
   }
+  */
 
   const links = [
     {
