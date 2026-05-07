@@ -1,9 +1,6 @@
 import React from "react";
-import {
-  IconPlus,
-} from "@tabler/icons-react";
-import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useOutletContext, useNavigate } from "react-router-dom";
 import { 
   FiSearch, 
   FiBell, 
@@ -14,6 +11,7 @@ import {
   FiArrowRight, 
   FiUser
 } from "react-icons/fi";
+import { IconPlus } from "@tabler/icons-react";
 
 const StatCard = ({ label, value, icon: Icon, color, trend }) => (
   <div className="bg-slate-900/40 backdrop-blur-xl border border-white/5 p-6 rounded-[32px] hover:border-indigo-500/30 transition-all group">
@@ -31,16 +29,11 @@ const StatCard = ({ label, value, icon: Icon, color, trend }) => (
 );
 
 export default function Dashboard() {
+  const { user } = useOutletContext();
   const navigate = useNavigate();
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
-      transition={{ duration: 0.3 }}
-      className="flex flex-1 flex-col overflow-y-auto bg-transparent z-10 custom-scrollbar"
-    >
+    <div className="flex flex-1 flex-col overflow-y-auto bg-transparent z-10 custom-scrollbar">
       {/* Topbar */}
       <header className="h-20 border-b border-white/10 px-8 flex items-center justify-between bg-slate-950/10 backdrop-blur-md sticky top-0 z-10">
         <div className="relative group w-96 hidden md:block">
@@ -59,11 +52,11 @@ export default function Dashboard() {
           </button>
           <div className="flex items-center gap-3 pl-4 border-l border-white/5">
             <div className="text-right hidden sm:block">
-              <p className="text-sm font-bold text-white">Alex Johnson</p>
-              <p className="text-xs text-slate-500">Premium Plan</p>
+              <p className="text-sm font-bold text-white">{user?.name || 'User'}</p>
+              <p className="text-xs text-slate-500">@{user?.handle || 'user'}</p>
             </div>
             <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center font-bold text-white">
-              AJ
+              {(user?.name || 'US').substring(0, 2).toUpperCase()}
             </div>
           </div>
         </div>
@@ -76,7 +69,7 @@ export default function Dashboard() {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
           >
-            <h1 className="text-4xl font-black text-white mb-2 tracking-tight">Good morning, <span className="text-indigo-400">Alex!</span></h1>
+            <h1 className="text-4xl font-black text-white mb-2 tracking-tight">Good morning, <span className="text-indigo-400">{(user?.name || 'User').split(' ')[0]}!</span></h1>
             <p className="text-slate-300 text-sm font-medium">You have a mock interview scheduled for today at 2:00 PM.</p>
           </motion.div>
           <button 
@@ -173,6 +166,6 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }

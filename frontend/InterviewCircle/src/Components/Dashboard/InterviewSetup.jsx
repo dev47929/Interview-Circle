@@ -12,7 +12,7 @@ import {
   FiCheck
 } from "react-icons/fi";
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { useAuth } from '../../Context/AuthContext';
 
 const SetupCard = ({ icon: Icon, title, desc, active, onClick }) => (
   <button 
@@ -37,6 +37,7 @@ const SetupCard = ({ icon: Icon, title, desc, active, onClick }) => (
 );
 
 const InterviewSetup = () => {
+  const { token } = useAuth();
   const [type, setType] = useState('technical');
   const [difficulty, setDifficulty] = useState('intermediate');
   const [isCreating, setIsCreating] = useState(false);
@@ -46,22 +47,41 @@ const InterviewSetup = () => {
     setIsCreating(true);
     try {
       const payload = {
-        resume: "v1", 
-        position: "Frontend Engineer",
-        company: "Interview Circle",
-        round_type: type === 'technical' ? 'Technical' : 'Behavioural',
-        difficulty: difficulty.charAt(0).toUpperCase() + difficulty.slice(1)
+        cv: "v1", // updated from resume
+        position: "Manager", 
+        company: "Birla",
+        type: type, // technical or behavioral
+        difficulty: difficulty // beginner, intermediate, etc.
       };
 
-      // In a real app, this would be an actual API call
-      // const response = await axios.post('http://localhost:5000/ai/create', payload);
-      // const { interview_id } = response.data;
-      
-      const mockInterviewId = `int_${Math.random().toString(36).substr(2, 9)}`;
+      let interview_id = "";
+
+      try {
+        const response = await fetch('https://app.totalchaos.online/ai/create', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.interview_id) {
+          interview_id = data.interview_id;
+          console.log("Interview created successfully:", interview_id);
+        } else {
+          throw new Error(data.message || "Failed to create interview session");
+        }
+      } catch (apiError) {
+        console.warn("API Create failed, using mock ID for session:", apiError);
+        interview_id = `int_${Math.random().toString(36).substr(2, 9)}`;
+      }
       
       navigate('/interview-room', { 
         state: { 
-          interview_id: mockInterviewId, 
+          interview_id: interview_id, 
           type: type 
         } 
       });

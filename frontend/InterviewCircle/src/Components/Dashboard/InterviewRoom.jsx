@@ -18,7 +18,7 @@ import {
 } from "react-icons/fi";
 import { useNavigate, useLocation } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
-import axios from 'axios';
+import { useAuth } from '../../Context/AuthContext';
 
 const InterviewRoom = () => {
   const location = useLocation();
@@ -145,25 +145,38 @@ const InterviewRoom = () => {
     setMessages(prev => [...prev, { role, text }]);
   };
 
+  const { token } = useAuth();
+
   const getAiResponse = async (userMessage) => {
     setIsAiThinking(true);
     try {
-      // Mock API call
-      setTimeout(() => {
-        const responses = [
-          `That's a great point about ${userMessage.split(' ').slice(-3).join(' ')}. How would you apply that in a team setting?`,
-          `Interesting. Can you walk me through a specific example where you used that approach?`,
-          `I see. What were the biggest challenges you faced while doing that?`,
-          `Correct. Now, let's shift gears a bit and talk about your experience with scalability.`
-        ];
-        const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-        addMessage('ai', randomResponse);
-        setIsAiThinking(false);
-      }, 1500);
+      const response = await fetch('https://app.totalchaos.online/ai/interview', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          message: userMessage,
+          interview_id: interview_id
+        }),
+      });
 
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to get AI response');
+      }
+      
+      if (data && data.message) {
+        addMessage('ai', data.message);
+      } else {
+        throw new Error("Invalid API response format");
+      }
     } catch (error) {
       console.error("Error getting AI response:", error);
-      addMessage('ai', "I'm sorry, I'm having trouble connecting. Could you please repeat that?");
+      addMessage('ai', "I'm sorry, I'm having trouble connecting to the interview server. Please check your connection.");
+    } finally {
       setIsAiThinking(false);
     }
   };

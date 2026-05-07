@@ -11,7 +11,9 @@ import InterviewFeedback from './Components/Dashboard/InterviewFeedback';
 import QuestionBank from './Components/Dashboard/QuestionBank';
 import QuestionSolver from './Components/Dashboard/QuestionSolver';
 import Settings from './Components/Dashboard/Settings';
+import Profile from './Components/Dashboard/Profile';
 import LandingBackground from './Components/React-bits/LandingBackground';
+import { AuthProvider } from './Context/AuthContext';
 import './App.css'
 
 const AnimatedRoutes = () => {
@@ -30,6 +32,7 @@ const AnimatedRoutes = () => {
           <Route path="/questions" element={<QuestionBank />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/setup" element={<InterviewSetup />} />
+          <Route path="/profile" element={<Profile />} />
         </Route>
 
         <Route path="/interview-room" element={<InterviewRoom />} />
@@ -43,24 +46,26 @@ const AnimatedRoutes = () => {
 
 function App() {
   return (
-    <div className="bg-[#020617] min-h-screen relative overflow-hidden">
-      {/* Persistent Global Background */}
-      <div className="fixed inset-0 z-0 pointer-events-none opacity-40">
-        <LandingBackground 
-          squareSize={50}
-          borderColor="#312e81"
-          hoverFillColor="#4338ca"
-          hoverTrailAmount={10}
-          speed={0.5}
-        />
-      </div>
+    <AuthProvider>
+      <div className="bg-[#020617] min-h-screen relative overflow-hidden">
+        {/* Persistent Global Background */}
+        <div className="fixed inset-0 z-0 pointer-events-none opacity-40">
+          <LandingBackground 
+            squareSize={50}
+            borderColor="#312e81"
+            hoverFillColor="#4338ca"
+            hoverTrailAmount={10}
+            speed={0.5}
+          />
+        </div>
 
-      <div className="relative z-10">
-        <Router>
-          <AnimatedRoutes />
-        </Router>
+        <div className="relative z-10">
+          <Router>
+            <AnimatedRoutes />
+          </Router>
+        </div>
       </div>
-    </div>
+    </AuthProvider>
   )
 }
 

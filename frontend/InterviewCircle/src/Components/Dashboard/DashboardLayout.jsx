@@ -12,13 +12,29 @@ import {
   IconBolt
 } from "@tabler/icons-react";
 import { Link, useNavigate, useLocation, Outlet } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useAuth } from "../../Context/AuthContext";
 
 export default function DashboardLayout() {
   const [open, setOpen] = useState(false);
+  const { user, logout, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+
+  if (loading) {
+    return (
+      <div className="h-screen w-full flex items-center justify-center bg-slate-950">
+        <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  // Redirect to login if not authenticated and not loading
+  if (!user && !loading) {
+    setTimeout(() => navigate('/login'), 0);
+    return null;
+  }
 
   const links = [
     {
@@ -48,7 +64,7 @@ export default function DashboardLayout() {
     },
     {
       label: "My Profile",
-      href: "#",
+      href: "/profile",
       icon: <IconUserBolt className="h-5 w-5 shrink-0 transition-colors text-white" />,
     },
     {
@@ -63,14 +79,19 @@ export default function DashboardLayout() {
     },
   ];
 
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
   return (
     <div className={cn(
       "flex flex-col md:flex-row bg-transparent w-full flex-1 mx-auto overflow-hidden relative",
       "h-screen"
     )}>
       {/* Decorative Glows - Persistent across dashboard routes */}
-      <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-indigo-500/5 blur-[120px] pointer-events-none z-0"></div>
-      <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-purple-500/5 blur-[120px] pointer-events-none z-0"></div>
+      <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-indigo-500/10 blur-[120px] pointer-events-none z-0"></div>
+      <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-purple-500/10 blur-[120px] pointer-events-none z-0"></div>
 
       <Sidebar open={open} setOpen={setOpen}>
         <SidebarBody className="justify-between gap-10 bg-slate-950/40 backdrop-blur-2xl border-r border-white/10 z-20">
@@ -82,12 +103,16 @@ export default function DashboardLayout() {
                   key={idx} 
                   link={link} 
                   className={cn(
-                    "hover:bg-white/5 rounded-xl transition-colors px-2 py-2",
+                    "hover:bg-white/5 rounded-xl transition-colors px-2 py-2 font-bold",
                     location.pathname === link.href && "bg-indigo-600/20 text-indigo-400"
                   )}
                   onClick={(e) => {
                     if (link.href === "#") e.preventDefault();
-                    if (link.href !== "#") navigate(link.href);
+                    if (link.label === "Logout") {
+                      handleLogout();
+                    } else if (link.href !== "#") {
+                      navigate(link.href);
+                    }
                   }}
                 />
               ))}
@@ -96,11 +121,11 @@ export default function DashboardLayout() {
           <div>
             <SidebarLink
               link={{
-                label: "Alex Johnson",
+                label: user?.name || "User",
                 href: "#",
                 icon: (
                   <div className="h-7 w-7 shrink-0 rounded-full bg-indigo-600 flex items-center justify-center font-bold text-[10px] text-white">
-                    AJ
+                    {(user?.name || "US").substring(0, 2).toUpperCase()}
                   </div>
                 ),
               }} />
@@ -109,7 +134,7 @@ export default function DashboardLayout() {
       </Sidebar>
       
       <main className="flex-1 overflow-y-auto relative z-10 custom-scrollbar">
-         <Outlet />
+         <Outlet context={{ user }} />
       </main>
     </div>
   );
@@ -144,20 +169,3 @@ const LogoIcon = () => {
     </Link>
   );
 };
-
-const IconBolt = ({ size, className }) => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    width={size} 
-    height={size} 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="2" 
-    strokeLinecap="round" 
-    strokeLinejoin="round" 
-    className={className}
-  >
-    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-  </svg>
-);

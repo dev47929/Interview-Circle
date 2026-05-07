@@ -1,16 +1,61 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FiMail, FiLock, FiArrowRight, FiZap } from "react-icons/fi";
+import { FiMail, FiLock, FiArrowRight, FiZap, FiLoader } from "react-icons/fi";
 import { FaGoogle, FaGithub } from "react-icons/fa";
 import { motion } from 'framer-motion';
+import { useAuth } from '../../Context/AuthContext';
 
 const Login = () => {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [formData, setFormData] = useState({
+    identifier: '',
+    password: ''
+  });
 
-  const handleLogin = (e) => {
+  const { login: contextLogin } = useAuth();
+
+  const handleLogin = async (e) => {
     e.preventDefault();
-    // Simulate login and redirect
-    navigate('/dashboard');
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch('https://app.totalchaos.online/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Invalid credentials. Please try again.');
+      }
+      
+      // Extract ONLY the token as per instructions
+      const token = data.access_token;
+
+      if (token) {
+        contextLogin(token);
+        console.log("Token received, navigating to dashboard...");
+        navigate('/dashboard');
+      } else {
+        throw new Error("No authentication token received from server");
+      }
+    } catch (err) {
+      console.error("Login error:", err);
+      setError(err.message || "Invalid credentials. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   return (
@@ -21,7 +66,6 @@ const Login = () => {
       transition={{ duration: 0.4 }}
       className="min-h-screen bg-transparent flex items-center justify-center p-6 relative overflow-hidden"
     >
-
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -40,17 +84,27 @@ const Login = () => {
             <p className="text-slate-400">Continue your journey to your dream job</p>
           </div>
 
-          <form className="space-y-6" onSubmit={handleLogin}>
+          {error && (
+            <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-2xl text-sm mb-6 flex items-center gap-3">
+              <FiZap className="shrink-0" />
+              {error}
+            </div>
+          )}
 
+          <form className="space-y-6" onSubmit={handleLogin}>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-300 ml-1">Email Address</label>
+              <label className="text-sm font-medium text-slate-300 ml-1">Email or Username</label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-500 group-focus-within:text-indigo-400 transition-colors">
                   <FiMail size={20} />
                 </div>
                 <input 
-                  type="email" 
-                  placeholder="name@company.com"
+                  type="text" 
+                  name="identifier"
+                  required
+                  value={formData.identifier}
+                  onChange={handleChange}
+                  placeholder="Email or @username"
                   className="w-full bg-slate-950/50 border border-white/5 rounded-2xl py-4 pl-12 pr-4 text-white focus:outline-none focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all"
                 />
               </div>
@@ -67,14 +121,21 @@ const Login = () => {
                 </div>
                 <input 
                   type="password" 
+                  name="password"
+                  required
+                  value={formData.password}
+                  onChange={handleChange}
                   placeholder="••••••••"
                   className="w-full bg-slate-950/50 border border-white/5 rounded-2xl py-4 pl-12 pr-4 text-white focus:outline-none focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all"
                 />
               </div>
             </div>
 
-            <button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-lg shadow-indigo-500/25">
-              Sign In <FiArrowRight size={20} />
+            <button 
+              disabled={loading}
+              className={`w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-lg shadow-indigo-500/25 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+            >
+              {loading ? <FiLoader className="animate-spin" size={20} /> : "Sign In"} <FiArrowRight size={20} />
             </button>
           </form>
 
@@ -107,6 +168,5 @@ const Login = () => {
     </motion.div>
   );
 };
-
 
 export default Login;

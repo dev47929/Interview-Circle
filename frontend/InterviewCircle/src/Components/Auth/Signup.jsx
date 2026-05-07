@@ -1,16 +1,53 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FiMail, FiLock, FiUser, FiArrowRight, FiZap, FiCheckCircle } from "react-icons/fi";
+import { FiMail, FiLock, FiUser, FiArrowRight, FiZap, FiCheckCircle, FiAtSign, FiLoader } from "react-icons/fi";
 import { FaGoogle, FaGithub } from "react-icons/fa";
 import { motion } from 'framer-motion';
 
 const Signup = () => {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [formData, setFormData] = useState({
+    name: '',
+    handle: '',
+    email: '',
+    password: '',
+    role: 'user' // default empty as requested
+  });
 
-  const handleSignup = (e) => {
+  const handleSignup = async (e) => {
     e.preventDefault();
-    // Simulate signup and redirect
-    navigate('/dashboard');
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch('https://app.totalchaos.online/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Signup failed. Please try again.');
+      }
+
+      console.log("Signup successful:", data);
+      navigate('/login'); // Redirect to login after successful signup
+    } catch (err) {
+      console.error("Signup error:", err);
+      setError(err.message || "Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   return (
@@ -21,7 +58,6 @@ const Signup = () => {
       transition={{ duration: 0.4 }}
       className="min-h-screen bg-transparent flex items-center justify-center p-6 relative overflow-hidden"
     >
-
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -72,79 +108,104 @@ const Signup = () => {
             </Link>
           </div>
 
-          <div className="mb-10">
+          <div className="mb-8">
             <h1 className="text-3xl font-bold text-white mb-2">Create Account</h1>
-            <p className="text-slate-400">Join 500K+ professionals worldwide</p>
+            <p className="text-slate-400 text-sm">Join 500K+ professionals worldwide</p>
           </div>
 
-          <form className="space-y-5" onSubmit={handleSignup}>
+          {error && (
+            <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-xl text-xs mb-6 flex items-center gap-2">
+              <FiZap className="shrink-0" />
+              {error}
+            </div>
+          )}
 
+          <form className="space-y-4" onSubmit={handleSignup}>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-300 ml-1">First Name</label>
+                <label className="text-xs font-medium text-slate-400 ml-1">Full Name</label>
                 <div className="relative group">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-500 group-focus-within:text-indigo-400 transition-colors">
-                    <FiUser size={18} />
+                    <FiUser size={16} />
                   </div>
                   <input 
                     type="text" 
-                    placeholder="John"
-                    className="w-full bg-slate-950/50 border border-white/5 rounded-2xl py-3.5 pl-11 pr-4 text-white focus:outline-none focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all text-sm"
+                    name="name"
+                    required
+                    value={formData.name}
+                    onChange={handleChange}
+                    placeholder="John Doe"
+                    className="w-full bg-slate-950/50 border border-white/5 rounded-2xl py-3 pl-11 pr-4 text-white focus:outline-none focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all text-sm"
                   />
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-300 ml-1">Last Name</label>
+                <label className="text-xs font-medium text-slate-400 ml-1">Username</label>
                 <div className="relative group">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-500 group-focus-within:text-indigo-400 transition-colors">
-                    <FiUser size={18} />
+                    <FiAtSign size={16} />
                   </div>
                   <input 
                     type="text" 
-                    placeholder="Doe"
-                    className="w-full bg-slate-950/50 border border-white/5 rounded-2xl py-3.5 pl-11 pr-4 text-white focus:outline-none focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all text-sm"
+                    name="handle"
+                    required
+                    value={formData.handle}
+                    onChange={handleChange}
+                    placeholder="johndoe"
+                    className="w-full bg-slate-950/50 border border-white/5 rounded-2xl py-3 pl-11 pr-4 text-white focus:outline-none focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all text-sm"
                   />
                 </div>
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-300 ml-1">Email Address</label>
+              <label className="text-xs font-medium text-slate-400 ml-1">Email Address</label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-500 group-focus-within:text-indigo-400 transition-colors">
-                  <FiMail size={18} />
+                  <FiMail size={16} />
                 </div>
                 <input 
                   type="email" 
+                  name="email"
+                  required
+                  value={formData.email}
+                  onChange={handleChange}
                   placeholder="john@example.com"
-                  className="w-full bg-slate-950/50 border border-white/5 rounded-2xl py-3.5 pl-11 pr-4 text-white focus:outline-none focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all text-sm"
+                  className="w-full bg-slate-950/50 border border-white/5 rounded-2xl py-3 pl-11 pr-4 text-white focus:outline-none focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all text-sm"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-300 ml-1">Password</label>
+              <label className="text-xs font-medium text-slate-400 ml-1">Password</label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-500 group-focus-within:text-indigo-400 transition-colors">
-                  <FiLock size={18} />
+                  <FiLock size={16} />
                 </div>
                 <input 
                   type="password" 
+                  name="password"
+                  required
+                  value={formData.password}
+                  onChange={handleChange}
                   placeholder="••••••••"
-                  className="w-full bg-slate-950/50 border border-white/5 rounded-2xl py-3.5 pl-11 pr-4 text-white focus:outline-none focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all text-sm"
+                  className="w-full bg-slate-950/50 border border-white/5 rounded-2xl py-3 pl-11 pr-4 text-white focus:outline-none focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all text-sm"
                 />
               </div>
             </div>
 
             <div className="flex items-start gap-3 py-2">
-              <input type="checkbox" className="mt-1 accent-indigo-600" id="terms" />
-              <label htmlFor="terms" className="text-xs text-slate-400 leading-relaxed">
+              <input type="checkbox" required className="mt-1 accent-indigo-600" id="terms" />
+              <label htmlFor="terms" className="text-[10px] text-slate-500 leading-relaxed">
                 By signing up, you agree to our <a href="#" className="text-indigo-400 hover:underline">Terms of Service</a> and <a href="#" className="text-indigo-400 hover:underline">Privacy Policy</a>.
               </label>
             </div>
 
-            <button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-lg shadow-indigo-500/25 mt-4">
-              Create Account <FiArrowRight size={20} />
+            <button 
+              disabled={loading}
+              className={`w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-4 rounded-2xl flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-lg shadow-indigo-500/25 mt-2 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+            >
+              {loading ? <FiLoader className="animate-spin" size={20} /> : "CREATE ACCOUNT"} <FiArrowRight size={20} />
             </button>
           </form>
 
@@ -153,7 +214,7 @@ const Signup = () => {
               <div className="w-full border-t border-white/5"></div>
             </div>
             <div className="relative flex justify-center text-[10px] uppercase tracking-widest">
-              <span className="bg-slate-900/50 px-4 text-slate-500 font-bold">Or register with</span>
+              <span className="bg-slate-950 px-4 text-slate-500 font-bold">Or register with</span>
             </div>
           </div>
 
@@ -177,6 +238,5 @@ const Signup = () => {
     </motion.div>
   );
 };
-
 
 export default Signup;
