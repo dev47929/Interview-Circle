@@ -15,6 +15,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import CreateInterview from './CreateInterview';
+import QuestionBank from './QuestionBank';
 import LandingBackground from '../React-bits/LandingBackground';
 import { 
   FiSearch, 
@@ -50,7 +51,7 @@ export default function Dashboard() {
   const links = [
     {
       label: "Dashboard",
-      href: "/dashboard",
+      href: "#",
       icon: (
         <IconBrandTabler className="h-5 w-5 shrink-0 transition-colors text-white" />
       ),
@@ -58,7 +59,7 @@ export default function Dashboard() {
     },
     {
       label: "Question Bank",
-      href: "/questions",
+      href: "#",
       icon: (
         <IconBook className="h-5 w-5 shrink-0 transition-colors text-white" />
       ),
@@ -98,7 +99,7 @@ export default function Dashboard() {
     },
     {
       label: "Settings",
-      href: "/settings",
+      href: "#",
       icon: (
         <IconSettings className="h-5 w-5 shrink-0 transition-colors text-white" />
       ),
@@ -148,9 +149,12 @@ export default function Dashboard() {
                     activeTab === link.tab && "bg-indigo-600/20 text-indigo-400"
                   )}
                   onClick={(e) => {
-                    if (link.href === "#") e.preventDefault();
-                    setActiveTab(link.tab);
-                    if (link.href !== "#" && link.href !== "/login") navigate(link.href);
+                    e.preventDefault();
+                    if (link.tab === 'Logout') {
+                      navigate('/login');
+                    } else {
+                      setActiveTab(link.tab);
+                    }
                   }}
                 />
               ))}
@@ -346,6 +350,8 @@ const DashboardContent = ({ activeTab, setActiveTab }) => {
           </>
         ) : activeTab === 'Create' ? (
           <CreateInterview />
+        ) : activeTab === 'Questions' ? (
+          <QuestionBank />
         ) : (
           <div className="flex flex-col items-center justify-center py-20 text-slate-500">
             <p className="text-lg font-medium">Content for {activeTab} is coming soon.</p>
