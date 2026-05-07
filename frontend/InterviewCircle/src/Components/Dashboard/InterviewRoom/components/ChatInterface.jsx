@@ -1,5 +1,5 @@
 import "regenerator-runtime/runtime";
-import React, { useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   IconSend,
@@ -61,8 +61,20 @@ const ChatInterface = ({
     }
   }, [transcript, setInput]);
 
+  const [shouldSend, setShouldSend] = useState(false);
+
+  // Auto-send effect: triggers when listening stops and shouldSend is true
+  useEffect(() => {
+    if (!listening && shouldSend) {
+      if (transcript.trim()) {
+        sendMessage();
+      }
+      setShouldSend(false);
+    }
+  }, [listening, shouldSend, transcript, sendMessage]);
+
   // Toggle microphone
-  const toggleMic = () => {
+  const toggleMic = useCallback(() => {
     if (!browserSupportsSpeechRecognition) {
       alert("Speech Recognition is not supported in this browser. Please try Chrome.");
       return;
@@ -75,6 +87,7 @@ const ChatInterface = ({
 
     if (listening) {
       SpeechRecognition.stopListening();
+      setShouldSend(true);
     } else {
       resetTranscript();
       SpeechRecognition.startListening({
@@ -82,7 +95,7 @@ const ChatInterface = ({
         language: "en-US",
       });
     }
-  };
+  }, [listening, browserSupportsSpeechRecognition, isMicrophoneAvailable, resetTranscript]);
 
   // Spacebar toggle
   useEffect(() => {
@@ -98,7 +111,7 @@ const ChatInterface = ({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [listening, browserSupportsSpeechRecognition, isMicrophoneAvailable]);
+  }, [toggleMic]);
 
   // ---------------- UI ----------------
 
