@@ -16,6 +16,7 @@ import {
   FiHash
 } from "react-icons/fi";
 import { Link } from 'react-router-dom';
+import { questionBankList } from './questionsData';
 
 const CategoryButton = ({ icon: Icon, label, active, onClick }) => (
   <button 
@@ -89,32 +90,12 @@ const QuestionBank = () => {
   const companies = ['All', 'Google', 'Amazon', 'Meta', 'Microsoft', 'Netflix', 'Apple', 'Uber'];
   const difficulties = ['All', 'Easy', 'Medium', 'Hard'];
 
-  const questions = [
-    { id: 'rotating-the-box', title: "Rotating the Box", difficulty: "Medium", category: "DSA", solved: false, company: "Amazon" },
-    { id: 'jump-game-ix', title: "Jump Game IX", difficulty: "Medium", category: "DSA", solved: false, company: "Google" },
-    { id: 'median-of-two-sorted-arrays', title: "Median of Two Sorted Arrays", difficulty: "Hard", category: "DSA", solved: false, company: "Meta" },
-    { id: 'closures-js', title: "Explain the concept of 'Closures' in JavaScript with examples.", difficulty: "Medium", category: "Technical", solved: true, company: "Google" },
-    { id: 'conflict-teammate', title: "Tell me about a time you had a conflict with a teammate.", difficulty: "Easy", category: "Behavioral", solved: true, company: "Amazon" },
-    { id: 'bitly-design', title: "Design a URL shortening service like Bitly.", difficulty: "Hard", category: "System Design", solved: false, company: "Meta" },
-    { id: 'sql-vs-nosql', title: "What is the difference between SQL and NoSQL?", difficulty: "Medium", category: "Database", solved: false, company: "Microsoft" },
-    { id: 'slow-react', title: "How would you optimize a slow React application?", difficulty: "Hard", category: "Technical", solved: true, company: "Netflix" },
-    { id: 'strengths-weaknesses', title: "What are your greatest strengths and weaknesses?", difficulty: "Easy", category: "Behavioral", solved: true, company: "Apple" },
-    { id: 'redux-scratch', title: "Implement a Redux-like state management from scratch.", difficulty: "Hard", category: "Technical", solved: false, company: "Uber" },
-    { id: 'notification-system', title: "Design a scalable notification system.", difficulty: "Hard", category: "System Design", solved: false, company: "Google" },
-    { id: 'db-normalization', title: "Explain database normalization and its forms.", difficulty: "Medium", category: "Database", solved: true, company: "Amazon" },
-    { id: 'binary-search-impl', title: "Implement Binary Search from scratch.", difficulty: "Easy", category: "DSA", solved: false, company: "Google" },
-    { id: 'reverse-linked-list', title: "Reverse a Singly Linked List.", difficulty: "Easy", category: "DSA", solved: false, company: "Microsoft" },
-    { id: 'two-sum', title: "Two Sum Problem.", difficulty: "Easy", category: "DSA", solved: true, company: "Amazon" },
-    { id: 'valid-parentheses', title: "Check for Valid Parentheses.", difficulty: "Easy", category: "DSA", solved: true, company: "Meta" },
-    { id: 'merge-k-sorted', title: "Merge k Sorted Lists.", difficulty: "Hard", category: "DSA", solved: false, company: "Amazon" },
-    { id: 'lru-cache', title: "Design and implement LRU Cache.", difficulty: "Hard", category: "DSA", solved: false, company: "Apple" },
-  ];
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
 
   const filteredQuestions = useMemo(() => {
-    return questions.filter(q => {
+    return questionBankList.filter(q => {
       const matchesCat = activeCat === 'All' || q.category === activeCat;
       const matchesSearch = q.title.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesDifficulty = selectedDifficulty === 'All' || q.difficulty === selectedDifficulty;
