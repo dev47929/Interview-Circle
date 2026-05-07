@@ -6,7 +6,7 @@ import Signup from './Components/Auth/Signup';
 import Dashboard from './Components/Dashboard/Dashboard';
 import DashboardLayout from './Components/Dashboard/DashboardLayout';
 import InterviewSetup from './Components/Dashboard/InterviewSetup';
-import InterviewRoom from './Components/Dashboard/InterviewRoom';
+import InterviewRoom from './Components/Dashboard/InterviewRoom/InterviewRoom';
 import InterviewFeedback from './Components/Dashboard/InterviewFeedback';
 import QuestionBank from './Components/Dashboard/QuestionBank';
 import QuestionSolver from './Components/Dashboard/QuestionSolver';

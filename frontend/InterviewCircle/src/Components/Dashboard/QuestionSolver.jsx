@@ -151,44 +151,118 @@ const QuestionSolver = () => {
     setCode(questionBoilerplates[language]);
   }, [language, id]);
 
-  const runCode = async () => {
-    try {
-      setIsRunning(true);
-      const payload = {
-        questionId: id,
-        language,
-        code,
-        testCases: question.testCases
-      };
+const runCode = async () => {
+  try {
+    setIsRunning(true);
 
-      console.log(payload);
+    setOutput("Analyzing code and generating hints...");
 
-      const response = await fetch(
-        'http://localhost:5000/run',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(payload)
-        }
-      );
-
-      const data = await response.json();
-
-      console.log(data);
-
-      setOutput(
-        JSON.stringify(data, null, 2)
-      );
-
-    } catch (error) {
-      console.log(error);
-      setOutput('Server Error');
-    } finally {
-      setIsRunning(false);
+    // SAFETY CHECK
+    if (!question) {
+      setOutput("Question data not found.");
+      return;
     }
-  };
+
+    const prompt = `
+You are an expert coding mentor.
+
+Problem:
+${question.title}
+
+Description:
+${question.description}
+
+Language:
+${language}
+
+Current Code:
+\`\`\`${language}
+${code}
+\`\`\`
+
+Rules:
+- Give ONLY hints
+- Do NOT provide full code
+- Explain the logical approach
+- Mention mistakes if present
+- Suggest optimizations if possible
+- Keep response concise and useful
+`;
+
+    const response = await fetch(
+      "https://openrouter.ai/api/v1/chat/completions",
+      {
+        method: "POST",
+
+        headers: {
+          Authorization:
+            "Bearer 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",
+
+          "Content-Type": "application/json",
+
+          "HTTP-Referer": window.location.origin,
+
+          "X-Title": "Interview Circle",
+        },
+
+        body: JSON.stringify({
+          // WORKING FREE MODEL
+          model: "mistralai/mistral-7b-instruct:free",
+
+          messages: [
+            {
+              role: "system",
+              content:
+                "You are a helpful DSA mentor that only gives hints and guidance.",
+            },
+
+            {
+              role: "user",
+              content: prompt,
+            },
+          ],
+
+          temperature: 0.7,
+
+          max_tokens: 400,
+        }),
+      }
+    );
+
+    // HANDLE ERRORS
+    if (!response.ok) {
+      const errorText = await response.text();
+
+      console.error("API Error:", errorText);
+
+      throw new Error(
+        `OpenRouter API Error ${response.status}`
+      );
+    }
+
+    const data = await response.json();
+
+    console.log(data);
+
+    const aiHint =
+      data?.choices?.[0]?.message?.content;
+
+    if (!aiHint) {
+      throw new Error("No response received");
+    }
+
+    setOutput(aiHint);
+
+  } catch (error) {
+    console.error("Run Code Error:", error);
+
+    setOutput(
+      `Error: ${error.message}`
+    );
+  } finally {
+    setIsRunning(false);
+  }
+};
 
   const questionData = {
     'rotating-the-box': {
