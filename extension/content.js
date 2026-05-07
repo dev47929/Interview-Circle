@@ -10,7 +10,7 @@
         enableRightClickBlocking: true,
         enableKeyboardShortcutBlocking: true,
         enableDevToolsDetection: true,
-        enableFullscreenEnforcement: false, // Optional, can be toggled
+        enableFullscreenEnforcement: true, // Now enabled
         logToConsole: true,
         backendUrl: null // Set this to your logging endpoint
     };
@@ -127,11 +127,49 @@
 
     // --- 7. Fullscreen Enforcement ---
     if (CONFIG.enableFullscreenEnforcement) {
-        document.addEventListener('fullscreenchange', () => {
+        const createFullscreenOverlay = () => {
+            if (document.getElementById('ic-fullscreen-prompt')) return;
+
+            const overlay = document.createElement('div');
+            overlay.id = 'ic-fullscreen-prompt';
+            overlay.innerHTML = `
+                <div class="ic-prompt-card">
+                    <div class="ic-icon">⛶</div>
+                    <h2>Fullscreen Required</h2>
+                    <p>This interview must be taken in fullscreen mode to ensure security. Please click the button below to continue.</p>
+                    <button id="ic-enter-fullscreen">Enter Fullscreen</button>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+
+            document.getElementById('ic-enter-fullscreen').addEventListener('click', () => {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.error(`Error attempting to enable full-screen mode: ${err.message}`);
+                });
+            });
+        };
+
+        const checkFullscreen = () => {
             if (!document.fullscreenElement) {
+                createFullscreenOverlay();
                 logEvent('FULLSCREEN_EXIT');
+            } else {
+                const overlay = document.getElementById('ic-fullscreen-prompt');
+                if (overlay) overlay.remove();
             }
-        });
+        };
+
+        document.addEventListener('fullscreenchange', checkFullscreen);
+        
+        // Initial check on first click/interaction
+        document.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                checkFullscreen();
+            }
+        }, { once: false });
+
+        // Periodically check if enforcement is active
+        setInterval(checkFullscreen, 3000);
     }
 
     // --- 8. Keyboard Shortcut Blocking ---

@@ -35,3 +35,66 @@ body.ic-anti-cheat-active {
         background: rgba(220, 38, 38, 0.85);
     }
 }
+
+/* Fullscreen Prompt Overlay */
+#ic-fullscreen-prompt {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2147483646;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: white;
+}
+
+.ic-prompt-card {
+    background: #1e293b;
+    padding: 40px;
+    border-radius: 24px;
+    text-align: center;
+    max-width: 400px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+.ic-icon {
+    font-size: 48px;
+    margin-bottom: 20px;
+    color: #6366f1;
+}
+
+.ic-prompt-card h2 {
+    font-size: 24px;
+    margin: 0 0 12px 0;
+    font-weight: 700;
+}
+
+.ic-prompt-card p {
+    color: #94a3b8;
+    line-height: 1.6;
+    margin-bottom: 24px;
+}
+
+#ic-enter-fullscreen {
+    background: #6366f1;
+    color: white;
+    border: none;
+    padding: 12px 32px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+#ic-enter-fullscreen:hover {
+    background: #4f46e5;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3);
+}
