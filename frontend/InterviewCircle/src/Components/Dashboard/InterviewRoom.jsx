@@ -26,18 +26,17 @@ const InterviewRoom = () => {
   
   // State from navigation - ensure we handle both cases correctly
   const state = location.state || {};
-  const interview_id = state.interview_id || 'demo-id';
-  const type = state.type || 'technical'; // fallback to behavioral
+  const interview_id = state.interview_id ? parseInt(state.interview_id, 10) : null;
+  const type = state.type || 'technical';
   
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [timeLeft, setTimeLeft] = useState(2700); // 45 minutes
-  const [messages, setMessages] = useState([
-    { role: 'ai', text: `Hello! I'm Sarah, your AI ${type} interviewer today. How are you feeling?` }
-  ]);
+  const [messages, setMessages] = useState([]);
   const [isAiThinking, setIsAiThinking] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [transcription, setTranscription] = useState("");
+  const hasStartedRef = useRef(false);
   
   // Technical Room States
   const [code, setCode] = useState("// Write your code here\n\nfunction solution() {\n  console.log('Hello World');\n}");
@@ -54,6 +53,17 @@ const InterviewRoom = () => {
       setTimeLeft(prev => prev > 0 ? prev - 1 : 0);
     }, 1000);
     return () => clearInterval(timer);
+  }, []);
+
+  // Preload voices for TTS
+  useEffect(() => {
+    const loadVoices = () => {
+      window.speechSynthesis.getVoices();
+    };
+    loadVoices();
+    if (window.speechSynthesis.onvoiceschanged !== undefined) {
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
   }, []);
 
   // WebCam
@@ -132,13 +142,43 @@ const InterviewRoom = () => {
       setIsRecording(false);
       recognitionRef.current.stop();
       
-      if (transcription.trim()) {
-        const userMessage = transcription;
-        addMessage('user', userMessage);
-        setTranscription("");
-        await getAiResponse(userMessage);
-      }
+      // Use a small timeout to ensure transcription is finalized
+      setTimeout(async () => {
+        if (transcription.trim()) {
+          const userMessage = transcription;
+          addMessage('user', userMessage);
+          setTranscription("");
+          await getAiResponse(userMessage);
+        }
+      }, 500);
     }
+  };
+
+  const speak = (text) => {
+    if (!window.speechSynthesis) return;
+    
+    // Stop any current speech
+    window.speechSynthesis.cancel();
+    
+    const utterance = new SpeechSynthesisUtterance(text);
+    
+    // Attempt to find a friendly female voice
+    const voices = window.speechSynthesis.getVoices();
+    const voice = voices.find(v => 
+      (v.name.includes('Google') && v.name.includes('US English') && v.name.includes('Female')) ||
+      (v.name.includes('Google') && v.name.includes('English') && (v.name.includes('Female') || v.name.includes('Natural'))) ||
+      v.name.includes('Zira') ||
+      v.name.includes('Female')
+    ) || voices[0];
+    
+    if (voice) utterance.voice = voice;
+    
+    // Friendly tone settings
+    utterance.pitch = 1.1; 
+    utterance.rate = 1.0;
+    utterance.volume = 1.0;
+    
+    window.speechSynthesis.speak(utterance);
   };
 
   const addMessage = (role, text) => {
@@ -170,16 +210,32 @@ const InterviewRoom = () => {
       
       if (data && data.message) {
         addMessage('ai', data.message);
+        // Read the AI response out loud
+        speak(data.message);
       } else {
         throw new Error("Invalid API response format");
       }
     } catch (error) {
       console.error("Error getting AI response:", error);
-      addMessage('ai', "I'm sorry, I'm having trouble connecting to the interview server. Please check your connection.");
+      const errorMessage = "I'm sorry, I'm having trouble connecting to the interview server. Please check your connection.";
+      addMessage('ai', errorMessage);
+      speak(errorMessage);
     } finally {
       setIsAiThinking(false);
     }
   };
+
+  // Auto-start interview
+  useEffect(() => {
+    if (interview_id !== null && token && !hasStartedRef.current) {
+      hasStartedRef.current = true;
+      // Slight delay to ensure components are ready
+      const timer = setTimeout(() => {
+        getAiResponse("start my interview");
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [interview_id, token]);
 
   const runCode = async () => {
     setIsRunning(true);
@@ -226,7 +282,7 @@ const InterviewRoom = () => {
       </div>
 
       <div className="absolute bottom-6 left-8">
-        <h3 className={`${isSmall ? 'text-xl' : 'text-3xl'} font-black mb-1 text-white tracking-tight`}>Sarah</h3>
+        <h3 className={`${isSmall ? 'text-xl' : 'text-3xl'} font-black mb-1 text-white tracking-tight`}>TejalAI</h3>
         <p className="text-indigo-400 text-[10px] font-bold flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
           Senior AI Interviewer
