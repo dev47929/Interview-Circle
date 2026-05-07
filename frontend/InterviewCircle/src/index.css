@@ -161,3 +161,21 @@
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
 }
+
+/* React Flow Horizontal Controls */
+.react-flow__controls.horizontal-controls {
+  display: flex !important;
+  flex-direction: row !important;
+  bottom: 10px !important;
+  left: 10px !important;
+  margin: 0 !important;
+}
+
+.react-flow__controls.horizontal-controls button {
+  border-bottom: none !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.react-flow__controls.horizontal-controls button:last-child {
+  border-right: none !important;
+}

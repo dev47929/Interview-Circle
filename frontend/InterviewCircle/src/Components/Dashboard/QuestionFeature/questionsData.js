@@ -77,6 +77,53 @@ public:
         
     }
 }`
+  },
+  'closures-js': {
+    javascript: `/**
+ * @param {string} concept
+ * @return {void}
+ */
+function explainClosure() {
+    // Write your example here
+}`,
+  },
+  'two-sum': {
+    javascript: `/**
+ * @param {number[]} nums
+ * @param {number} target
+ * @return {number[]}
+ */
+var twoSum = function(nums, target) {
+    
+};`,
+    python: `class Solution:
+    def twoSum(self, nums: List[int], target: int) -> List[int]:
+        pass`,
+  },
+  'reverse-linked-list': {
+    javascript: `/**
+ * @param {ListNode} head
+ * @return {ListNode}
+ */
+var reverseList = function(head) {
+    
+};`,
+    python: `class Solution:
+    def reverseList(self, head: Optional[ListNode]) -> Optional[ListNode]:
+        pass`,
+  },
+  'binary-search-impl': {
+    javascript: `/**
+ * @param {number[]} nums
+ * @param {number} target
+ * @return {number}
+ */
+var search = function(nums, target) {
+    
+};`,
+    python: `class Solution:
+    def search(self, nums: List[int], target: int) -> int:
+        pass`,
   }
 };
 
@@ -213,6 +260,192 @@ The overall run time complexity should be O(log (m+n)).`,
         expectedOutput: '2.50000'
       }
     ]
+  },
+  'closures-js': {
+    title: "Explain Closures",
+    difficulty: "Medium",
+    category: "Technical",
+    company: "Google",
+    description: "Explain the concept of 'Closures' in JavaScript with examples. How do they work under the hood with lexical scoping?",
+    examples: [
+      {
+        input: "function outer() { let x = 10; return function inner() { console.log(x); } }",
+        output: "10",
+        explanation: "The inner function retains access to the variable x even after outer has finished executing."
+      }
+    ],
+    constraints: ["Explain with code snippets", "Mention use cases like data privacy"],
+    testCases: []
+  },
+  'two-sum': {
+    title: "Two Sum",
+    difficulty: "Easy",
+    category: "DSA",
+    company: "Amazon",
+    description: "Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.",
+    examples: [
+      {
+        input: "nums = [2,7,11,15], target = 9",
+        output: "[0,1]",
+        explanation: "Because nums[0] + nums[1] == 9, we return [0, 1]."
+      }
+    ],
+    constraints: ["2 <= nums.length <= 10^4", "-10^9 <= nums[i] <= 10^9", "-10^9 <= target <= 10^9"],
+    testCases: []
+  },
+  'reverse-linked-list': {
+    title: "Reverse Linked List",
+    difficulty: "Easy",
+    category: "DSA",
+    company: "Microsoft",
+    description: "Given the head of a singly linked list, reverse the list, and return the reversed list.",
+    examples: [
+      {
+        input: "head = [1,2,3,4,5]",
+        output: "[5,4,3,2,1]",
+        explanation: "The list is reversed from 1->2->3->4->5 to 5->4->3->2->1."
+      }
+    ],
+    constraints: ["The number of nodes in the list is the range [0, 5000].", "-5000 <= Node.val <= 5000"],
+    testCases: []
+  },
+  'binary-search-impl': {
+    title: "Implement Binary Search",
+    difficulty: "Easy",
+    category: "DSA",
+    company: "Google",
+    description: "Given an array of integers nums which is sorted in ascending order, and an integer target, write a function to search target in nums. If target exists, then return its index. Otherwise, return -1.",
+    examples: [
+      {
+        input: "nums = [-1,0,3,5,9,12], target = 9",
+        output: "4",
+        explanation: "9 exists in nums and its index is 4"
+      }
+    ],
+    constraints: ["1 <= nums.length <= 10^4", "-10^4 < nums[i], target < 10^4", "All the integers in nums are unique.", "nums is sorted in ascending order."],
+    testCases: []
+  },
+  'conflict-teammate': {
+    title: "Conflict with Teammate",
+    difficulty: "Easy",
+    category: "Behavioral",
+    company: "Amazon",
+    description: "Tell me about a time you had a conflict with a teammate. How did you resolve it?",
+    examples: [],
+    constraints: [],
+  },
+  'bitly-design': {
+    title: "Design Bitly",
+    difficulty: "Hard",
+    category: "System Design",
+    company: "Meta",
+    description: "Design a URL shortening service like Bitly. Focus on scalability and URL redirection.",
+    requirements: [
+      "Shorten a long URL to a unique short alias",
+      "Redirect short URL to original URL",
+      "High availability and low latency",
+      "Support custom aliases",
+      "URLs should expire after a default time"
+    ],
+    constraints: [
+      "100M new URLs per month",
+      "10:1 read-to-write ratio",
+      "6 characters for the short URL",
+      "Short URLs should be base62 encoded"
+    ],
+    scale: {
+      writes: "40/sec",
+      reads: "400/sec",
+      storage: "15TB over 5 years"
+    }
+  },
+  'sql-vs-nosql': {
+    title: "SQL vs NoSQL",
+    difficulty: "Medium",
+    category: "Database",
+    company: "Microsoft",
+    description: "What is the difference between SQL and NoSQL? When would you use one over the other?",
+    examples: [],
+    constraints: [],
+  },
+  'slow-react': {
+    title: "Optimize Slow React App",
+    difficulty: "Hard",
+    category: "Technical",
+    company: "Netflix",
+    description: "How would you optimize a slow React application? Mention memoization, code splitting, and profiling.",
+    examples: [],
+    constraints: [],
+  },
+  'strengths-weaknesses': {
+    title: "Strengths and Weaknesses",
+    difficulty: "Easy",
+    category: "Behavioral",
+    company: "Apple",
+    description: "What are your greatest strengths and weaknesses? How do you work on your weaknesses?",
+    examples: [],
+    constraints: [],
+  },
+  'redux-scratch': {
+    title: "Redux from Scratch",
+    difficulty: "Hard",
+    category: "Technical",
+    company: "Uber",
+    description: "Implement a Redux-like state management from scratch. Focus on createStore, dispatch, and subscribe.",
+    examples: [],
+    constraints: [],
+  },
+  'notification-system': {
+    title: "Notification System Design",
+    difficulty: "Hard",
+    category: "System Design",
+    company: "Google",
+    description: "Design a scalable notification system. Handle push, email, and SMS notifications.",
+    requirements: [
+      "Support Push, SMS, and Email notifications",
+      "Real-time delivery for critical alerts",
+      "Support for bulk notifications (marketing)",
+      "User opt-out/preference management",
+      "Rate limiting and deduplication"
+    ],
+    constraints: [
+      "Millions of users",
+      "High delivery rate (10k+ per second)",
+      "Message tracking and analytics",
+      "Retry mechanism for failed deliveries"
+    ],
+    scale: {
+      total_users: "50M",
+      daily_notifications: "100M",
+      peak_load: "20k/sec"
+    }
+  },
+  'db-normalization': {
+    title: "Database Normalization",
+    difficulty: "Medium",
+    category: "Database",
+    company: "Amazon",
+    description: "Explain database normalization and its forms (1NF, 2NF, 3NF, BCNF).",
+    examples: [],
+    constraints: [],
+  },
+  'merge-k-sorted': {
+    title: "Merge k Sorted Lists",
+    difficulty: "Hard",
+    category: "DSA",
+    company: "Amazon",
+    description: "Merge k sorted linked lists and return it as one sorted list.",
+    examples: [],
+    constraints: [],
+  },
+  'lru-cache': {
+    title: "LRU Cache",
+    difficulty: "Hard",
+    category: "DSA",
+    company: "Apple",
+    description: "Design and implement a data structure for Least Recently Used (LRU) cache.",
+    examples: [],
+    constraints: [],
   }
 };
 
