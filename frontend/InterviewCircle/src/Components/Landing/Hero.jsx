@@ -78,7 +78,12 @@ const Hero = () => {
           <div className="aspect-video rounded-2xl bg-slate-900 border border-white/10 overflow-hidden shadow-2xl relative group">
             {!isPlaying ? (
               <>
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-slate-950/50" />
+                <img 
+                  src="https://img.youtube.com/vi/srw4r3htm4U/maxresdefault.jpg" 
+                  alt="AI Interview Demo Thumbnail"
+                  className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700"
+                />
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-slate-950/70" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div 
                     onClick={() => setIsPlaying(true)}
