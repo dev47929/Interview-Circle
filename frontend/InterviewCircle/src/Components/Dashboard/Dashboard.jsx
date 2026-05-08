@@ -10,7 +10,9 @@ import {
   FiArrowRight, 
   FiClock,
   FiUser,
-  FiFileText
+  FiFileText,
+  FiMail,
+  FiCheck
 } from "react-icons/fi";
 import { IconPlus } from "@tabler/icons-react";
 
@@ -32,6 +34,33 @@ const StatCard = ({ label, value, icon: Icon, color, trend }) => (
 export default function Dashboard() {
   const { user } = useOutletContext();
   const navigate = useNavigate();
+  const [email, setEmail] = React.useState("");
+  const [reportStatus, setReportStatus] = React.useState("idle"); // idle, loading, success, error
+
+  const handleGetReport = async () => {
+    if (!email || !email.includes('@')) return;
+    setReportStatus("loading");
+    try {
+      const response = await fetch("https://app.totalchaos.online/report/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ to: email }),
+      });
+      if (response.ok) {
+        setReportStatus("success");
+        setTimeout(() => setReportStatus("idle"), 3000);
+      } else {
+        setReportStatus("error");
+        setTimeout(() => setReportStatus("idle"), 3000);
+      }
+    } catch (error) {
+      console.error(error);
+      setReportStatus("error");
+      setTimeout(() => setReportStatus("idle"), 3000);
+    }
+  };
 
   return (
     <div className="flex flex-1 flex-col overflow-y-auto bg-transparent z-10 custom-scrollbar">
@@ -168,6 +197,61 @@ export default function Dashboard() {
                 </div>
                 <FiArrowRight size={16} className="ml-auto text-slate-600 group-hover:text-indigo-400 group-hover:translate-x-1 transition-all" />
               </div>
+            </div>
+
+            {/* Weekly Report CTA */}
+            <div className="bg-slate-900/30 border border-white/5 p-8 rounded-[32px] space-y-6 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 blur-[40px] -translate-y-1/2 translate-x-1/2 group-hover:bg-indigo-500/10 transition-all" />
+              
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <FiMail size={24} />
+                </div>
+                <div>
+                  <h3 className="text-white font-bold text-sm tracking-tight">Weekly Performance Report</h3>
+                  <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Get insights in your inbox</p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div className="relative">
+                  <input 
+                    type="email" 
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Enter your email address" 
+                    className="w-full bg-slate-950/50 border border-white/10 rounded-2xl px-5 py-3.5 text-sm text-white focus:outline-none focus:border-indigo-500/50 focus:bg-slate-950 transition-all placeholder:text-slate-600"
+                  />
+                  {reportStatus === "success" && (
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 text-emerald-400 flex items-center gap-2 text-xs font-bold animate-in fade-in slide-in-from-right-2">
+                      <FiCheck /> Sent!
+                    </div>
+                  )}
+                </div>
+                <button 
+                  onClick={handleGetReport}
+                  disabled={reportStatus === "loading" || !email}
+                  className={cn(
+                    "w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all active:scale-[0.98] shadow-xl",
+                    reportStatus === "loading" ? "bg-slate-800 text-slate-500 cursor-not-allowed" : 
+                    reportStatus === "success" ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/20" :
+                    reportStatus === "error" ? "bg-rose-500/20 text-rose-400 border border-rose-500/20" :
+                    "bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-600/20"
+                  )}
+                >
+                  {reportStatus === "loading" ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="w-3 h-3 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
+                      Processing...
+                    </div>
+                  ) : reportStatus === "success" ? "Report Sent Successfully" : 
+                    reportStatus === "error" ? "Failed to Send Report" : 
+                    "Send Weekly Report"}
+                </button>
+              </div>
+              <p className="text-[10px] text-center text-slate-600 font-medium">
+                By clicking, you agree to receive a one-time automated email with your performance data.
+              </p>
             </div>
           </div>
         </div>
