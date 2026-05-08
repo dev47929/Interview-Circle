@@ -4,7 +4,7 @@ import { FiClock, FiTarget, FiActivity, FiZap, FiBox, FiChevronLeft, FiChevronRi
 import DesignCanvas from './DesignCanvas';
 import NodePalette from './NodePalette';
 
-const SystemDesignWorkspace = ({ question }) => {
+const SystemDesignWorkspace = ({ question, output }) => {
   const [timeLeft, setTimeLeft] = useState(2700); // 45 minutes
   const [isPaletteExpanded, setIsPaletteExpanded] = useState(true);
 
@@ -37,7 +37,8 @@ const SystemDesignWorkspace = ({ question }) => {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar">
+        {/* Top Half: Requirements */}
+        <div className="h-1/2 overflow-y-auto p-8 space-y-8 custom-scrollbar border-b border-white/5">
           {/* Main Description */}
           <section>
             <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-4">The Challenge</h3>
@@ -98,6 +99,29 @@ const SystemDesignWorkspace = ({ question }) => {
                 ))}
               </ul>
             </section>
+          )}
+        </div>
+
+        {/* Bottom Half: AI Architectural Analysis */}
+        <div className="flex-1 overflow-y-auto p-8 custom-scrollbar bg-slate-900/20">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Architectural Analysis</h3>
+          </div>
+          
+          {output ? (
+            <div className="prose prose-invert max-w-none">
+              <div className="text-slate-300 text-sm leading-relaxed whitespace-pre-wrap bg-white/5 border border-white/5 rounded-2xl p-6 shadow-xl">
+                {output}
+              </div>
+            </div>
+          ) : (
+            <div className="h-full flex flex-col items-center justify-center text-center opacity-30 grayscale p-10">
+              <FiZap size={40} className="text-slate-600 mb-4" />
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">
+                Analyze architecture to get guidance
+              </p>
+            </div>
           )}
         </div>
       </div>

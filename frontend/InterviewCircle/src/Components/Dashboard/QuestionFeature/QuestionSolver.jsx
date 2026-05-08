@@ -10,7 +10,7 @@ import SystemDesignWorkspace from './SystemDesign/SystemDesignWorkspace';
 
 const QuestionSolver = () => {
   const { id } = useParams();
-  
+
   // Debug log (visible in browser console)
   useEffect(() => {
     console.log("QuestionSolver loading ID:", id);
@@ -90,19 +90,67 @@ const QuestionSolver = () => {
     setCode(questionBoilerplates[language]);
   }, [language, id]);
 
-const runCode = async () => {
-  try {
-    setIsRunning(true);
+  const runCode = async () => {
+    try {
+      setIsRunning(true);
+      
+      if (!question) {
+        setOutput("Question data not found.");
+        setIsRunning(false);
+        return;
+      }
 
-    setOutput("Analyzing code and generating hints...");
+      const isBehavioral = question.category === 'Behavioral';
+      const isSystemDesign = question.category === 'System Design';
+      
+      setOutput(
+        isBehavioral ? "Analyzing your response..." : 
+        isSystemDesign ? "Analyzing architectural requirements..." : 
+        "Analyzing code and generating hints..."
+      );
 
-    // SAFETY CHECK
-    if (!question) {
-      setOutput("Question data not found.");
-      return;
-    }
+      const prompt = isBehavioral
+        ? `
+You are an expert interview coach.
 
-    const prompt = `
+Problem:
+${question.title}
+
+Description:
+${question.description}
+
+User's Response:
+${behavioralResponse}
+
+Rules:
+- Evaluate the response based on the STAR method (Situation, Task, Action, Result)
+- Provide constructive feedback
+- Suggest improvements or alternative phrasing
+- Keep response concise and professional
+`
+        : isSystemDesign
+        ? `
+You are a senior system design architect.
+
+Problem:
+${question.title}
+
+Description:
+${question.description}
+
+Requirements:
+${question.requirements?.join('\n') || 'N/A'}
+
+Constraints:
+${question.constraints?.join('\n') || 'N/A'}
+
+Rules:
+- Provide high-level architectural guidance
+- Suggest common patterns (e.g., Load Balancers, Caching, Databases)
+- Mention potential bottlenecks
+- Keep response concise and structured
+`
+        : `
 You are an expert coding mentor.
 
 Problem:
@@ -128,80 +176,45 @@ Rules:
 - Keep response concise and useful
 `;
 
-    const response = await fetch(
-      "https://openrouter.ai/api/v1/chat/completions",
-      {
-        method: "POST",
-
-        headers: {
-          Authorization:
-            "Bearer TOKEN",
-
-          "Content-Type": "application/json",
-
-          "HTTP-Referer": window.location.origin,
-
-          "X-Title": "Interview Circle",
-        },
-
-        body: JSON.stringify({
-          // WORKING FREE MODEL
-          model: "mistralai/mistral-7b-instruct:free",
-
-          messages: [
-            {
-              role: "system",
-              content:
-                "You are a helpful DSA mentor that only gives hints and guidance.",
-            },
-
-            {
-              role: "user",
-              content: prompt,
-            },
-          ],
-
-          temperature: 0.7,
-
-          max_tokens: 400,
-        }),
-      }
-    );
-
-    // HANDLE ERRORS
-    if (!response.ok) {
-      const errorText = await response.text();
-
-      console.error("API Error:", errorText);
-
-      throw new Error(
-        `OpenRouter API Error ${response.status}`
+      const response = await fetch(
+        "https://app.totalchaos.online/ai/",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            message: prompt
+          }),
+        }
       );
+
+      // HANDLE ERRORS
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("API Error:", errorText);
+        throw new Error(`API Error ${response.status}`);
+      }
+
+      const data = await response.json();
+      const aiHint = data?.response;
+
+      if (!aiHint) {
+        throw new Error("No response received");
+      }
+
+      setOutput(aiHint);
+
+    } catch (error) {
+      console.error("Run Code Error:", error);
+
+      setOutput(
+        `Error: ${error.message}`
+      );
+    } finally {
+      setIsRunning(false);
     }
-
-    const data = await response.json();
-
-    console.log(data);
-
-    const aiHint =
-      data?.choices?.[0]?.message?.content;
-
-    if (!aiHint) {
-      throw new Error("No response received");
-    }
-
-    setOutput(aiHint);
-
-  } catch (error) {
-    console.error("Run Code Error:", error);
-
-    setOutput(
-      `Error: ${error.message}`
-    );
-  } finally {
-    setIsRunning(false);
-  }
-};
+  };
 
 
 
@@ -232,8 +245,8 @@ Rules:
             disabled={isRunning}
             className="flex items-center gap-2 px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-xs font-bold transition-all shadow-lg shadow-indigo-500/20 active:scale-95"
           >
-            {isRunning ? <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : (question.category === 'Behavioral' ? <FiCpu size={14} /> : <FiPlay size={14} />)}
-            {question.category === 'Behavioral' ? 'Analyze Response' : 'Run Code'}
+            {isRunning ? <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : (question.category === 'Behavioral' || question.category === 'System Design' ? <FiCpu size={14} /> : <FiPlay size={14} />)}
+            {question.category === 'Behavioral' ? 'Analyze Response' : question.category === 'System Design' ? 'Analyze Architecture' : 'Run Code'}
           </button>
           <button className="flex items-center gap-2 px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-xs font-bold transition-all shadow-lg shadow-emerald-500/20 active:scale-95">
             <FiSave size={14} /> Submit
@@ -244,59 +257,87 @@ Rules:
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
         {question.category === 'System Design' ? (
-          <SystemDesignWorkspace question={question} />
+          <SystemDesignWorkspace question={question} output={output} />
         ) : (
           <>
-            {/* Left: Description */}
-            <div className="w-1/2 border-r border-white/5 overflow-y-auto p-8 custom-scrollbar bg-slate-950/50">
-              <div className="flex items-center gap-3 mb-6">
-                <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded ${question.difficulty === 'Easy' ? 'bg-emerald-500/10 text-emerald-400' :
-                  question.difficulty === 'Medium' ? 'bg-amber-500/10 text-amber-400' :
-                    'bg-red-500/10 text-red-400'
-                  }`}>
-                  {question.difficulty}
-                </span>
-                <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded bg-slate-800 text-slate-400">
-                  {question.category}
-                </span>
-                {question.company && (
-                  <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400">
-                    {question.company}
+            {/* Left: Description & Analysis */}
+            <div className="w-1/2 border-r border-white/5 flex flex-col overflow-hidden bg-slate-950/50">
+              {/* Top Half: Question Details */}
+              <div className={`${question.category === 'Behavioral' ? 'h-1/2' : 'h-full'} overflow-y-auto p-8 custom-scrollbar border-b border-white/5`}>
+                <div className="flex items-center gap-3 mb-6">
+                  <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded ${question.difficulty === 'Easy' ? 'bg-emerald-500/10 text-emerald-400' :
+                    question.difficulty === 'Medium' ? 'bg-amber-500/10 text-amber-400' :
+                      'bg-red-500/10 text-red-400'
+                    }`}>
+                    {question.difficulty}
                   </span>
-                )}
-              </div>
+                  <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded bg-slate-800 text-slate-400">
+                    {question.category}
+                  </span>
+                  {question.company && (
+                    <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400">
+                      {question.company}
+                    </span>
+                  )}
+                </div>
 
-              <div className="prose prose-invert max-w-none">
-                <p className="text-slate-300 leading-relaxed text-sm mb-8">
-                  {question.description}
-                </p>
+                <div className="prose prose-invert max-w-none">
+                  <p className="text-slate-300 leading-relaxed text-sm mb-8">
+                    {question.description}
+                  </p>
 
-                {question.examples && question.examples.length > 0 && question.examples.map((ex, i) => (
-                  <div key={i} className="bg-slate-900/30 border border-white/5 rounded-2xl p-6 my-6">
-                    <p className="text-white font-bold text-sm mb-4">Example {i + 1}:</p>
-                    <div className="space-y-3 font-mono text-[11px] leading-relaxed">
-                      <div className="p-3 bg-black/30 rounded-xl">
-                        <p><span className="text-indigo-400">Input:</span> {ex.input}</p>
-                        <p><span className="text-indigo-400">Output:</span> {ex.output}</p>
+                  {question.examples && question.examples.length > 0 && question.examples.map((ex, i) => (
+                    <div key={i} className="bg-slate-900/30 border border-white/5 rounded-2xl p-6 my-6">
+                      <p className="text-white font-bold text-sm mb-4">Example {i + 1}:</p>
+                      <div className="space-y-3 font-mono text-[11px] leading-relaxed">
+                        <div className="p-3 bg-black/30 rounded-xl">
+                          <p><span className="text-indigo-400">Input:</span> {ex.input}</p>
+                          <p><span className="text-indigo-400">Output:</span> {ex.output}</p>
+                        </div>
+                        {ex.explanation && (
+                          <p className="text-slate-500 italic">
+                            <span className="text-slate-400 not-italic font-bold">Explanation:</span> {ex.explanation}
+                          </p>
+                        )}
                       </div>
-                      {ex.explanation && (
-                        <p className="text-slate-500 italic">
-                          <span className="text-slate-400 not-italic font-bold">Explanation:</span> {ex.explanation}
-                        </p>
-                      )}
                     </div>
-                  </div>
-                ))}
+                  ))}
 
-                {question.constraints && question.constraints.length > 0 && (
-                  <div>
-                    <p className="text-white font-bold text-sm mb-4">Constraints:</p>
-                    <ul className="list-disc pl-5 space-y-2 text-xs text-slate-500">
-                      {question.constraints.map((c, i) => <li key={i}>{c}</li>)}
-                    </ul>
-                  </div>
-                )}
+                  {question.constraints && question.constraints.length > 0 && (
+                    <div>
+                      <p className="text-white font-bold text-sm mb-4">Constraints:</p>
+                      <ul className="list-disc pl-5 space-y-2 text-xs text-slate-500">
+                        {question.constraints.map((c, i) => <li key={i}>{c}</li>)}
+                      </ul>
+                    </div>
+                  )}
+                </div>
               </div>
+
+              {/* Bottom Half: AI Response (Only for Behavioral) */}
+              {question.category === 'Behavioral' && (
+                <div className="flex-1 overflow-y-auto p-8 custom-scrollbar bg-slate-900/20">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+                    <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">AI Interview Analysis</h3>
+                  </div>
+                  
+                  {output ? (
+                    <div className="prose prose-invert max-w-none">
+                      <div className="text-slate-300 text-sm leading-relaxed whitespace-pre-wrap bg-white/5 border border-white/5 rounded-2xl p-6 shadow-xl">
+                        {output}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="h-full flex flex-col items-center justify-center text-center opacity-30 grayscale p-10">
+                      <FiCpu size={40} className="text-slate-600 mb-4" />
+                      <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">
+                        Submit your response to see analysis
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Right: Code Editor / Behavioral Workspace */}
@@ -335,8 +376,8 @@ Rules:
                         whileTap={{ scale: 0.95 }}
                         onClick={toggleRecording}
                         className={`w-20 h-20 rounded-full flex items-center justify-center cursor-pointer transition-all z-10 ${listening
-                            ? 'bg-rose-500 shadow-[0_0_40px_rgba(244,63,94,0.3)] animate-pulse'
-                            : 'bg-indigo-600 hover:bg-indigo-500 shadow-lg shadow-indigo-500/20'
+                          ? 'bg-rose-500 shadow-[0_0_40px_rgba(244,63,94,0.3)] animate-pulse'
+                          : 'bg-indigo-600 hover:bg-indigo-500 shadow-lg shadow-indigo-500/20'
                           }`}
                       >
                         {listening ? <FiSquare className="text-white" size={28} /> : <FiMic className="text-white" size={28} />}
