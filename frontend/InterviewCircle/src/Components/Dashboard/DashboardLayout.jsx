@@ -14,6 +14,7 @@ import { Link, useNavigate, useLocation, Outlet } from "react-router-dom";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useAuth } from "../../Context/AuthContext";
+import GetweeklyReport from "./GetweeklyReport";
 
 export default function DashboardLayout() {
   const [open, setOpen] = useState(false);
@@ -125,6 +126,7 @@ export default function DashboardLayout() {
                   </div>
                 ),
               }} />
+            <GetweeklyReport open={open} />
           </div>
         </SidebarBody>
       </Sidebar>
