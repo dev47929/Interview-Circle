@@ -75,43 +75,17 @@ class OTPCode(Base):
 
     user = relationship("User")
 
+class Interview(Base):
+    __tablename__ = "interviews"
 
-class Job(Base):
-    __tablename__ = "jobs"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
 
-    # Primary Key
-    ref = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    difficulty = Column(String(50), nullable=True)
+    position = Column(String(100), nullable=True)   
+    type = Column(String(50), nullable=True)  # e.g., "behavioral", "technical"
+    company = Column(String(100), nullable=True)
+    cv = Column(Text, nullable=True)  # Store CV text or path to CV file
 
-    # Basic Info
-    title = Column(String(255), nullable=False)
-    description = Column(Text, nullable=False)
-
-    job_type = Column(String(255), nullable=True)
-    skills = Column(ARRAY(String), nullable=True)
-    company = Column(String(255), nullable=True)
-
-    # Location
-    location = Column(String(255), nullable=True)
-    salary = Column(Integer, nullable=True)
-
-    posted_at = Column(TIMESTAMP, default=datetime.utcnow)
+    created_at = Column(TIMESTAMP, default=datetime.utcnow)
     user = relationship("User")
-
-
-
-class Freelancer(Base):
-    __tablename__ = "freelancers"
-
-    ref = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
-
-    title = Column(String(255), nullable=False)
-    bio = Column(Text, nullable=True)
-
-    skills = Column(ARRAY(String), nullable=True)
-    hourly_rate = Column(Integer, nullable=True)
-    expected_salary = Column(Integer, nullable=True)
-    posted_at = Column(TIMESTAMP(timezone=True), default=datetime.utcnow, nullable=False)
-
-    user = relationship("User", backref="freelancer", passive_deletes=True)

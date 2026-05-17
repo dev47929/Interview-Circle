@@ -1,5 +1,28 @@
 import re , json , fitz
 
+from pathlib import Path
+from fastapi import UploadFile
+import shutil
+
+
+def save_cv_pdf(pdf: UploadFile, user_id: int, label: str):
+    
+    # create directory
+    folder = Path(f"data/{user_id}")
+    folder.mkdir(parents=True, exist_ok=True)
+
+    # sanitize label
+    safe_label = label.strip().replace(" ", "_").lower()
+
+    # final path
+    file_path = folder / f"cv_{safe_label}.pdf"
+
+    # save file
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(pdf.file, buffer)
+
+    return str(file_path)
+
 
 def read_pdf(file_path):
     doc = fitz.open(file_path)

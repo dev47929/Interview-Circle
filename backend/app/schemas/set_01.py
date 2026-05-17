@@ -13,6 +13,7 @@ class SignupRequest(BaseModel):
 class LoginRequest(BaseModel):
     identifier: str   # email OR handle
     password: str = Field(min_length=6, max_length=60)
+    
 
 
 class OTPRequest(BaseModel):
